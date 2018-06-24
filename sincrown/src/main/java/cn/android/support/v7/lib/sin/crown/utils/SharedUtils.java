@@ -12,6 +12,7 @@ import java.io.File;
 
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseApplication;
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseListenner;
+import cn.android.support.v7.lib.sin.crown.kotlin.common.Toast;
 
 
 /**
@@ -102,7 +103,7 @@ public class SharedUtils {
             sharedMsg(activity, title, "", txtConten, null, packageQQ);
         } else {
             //ToastUtils.show(activity, "请先安装QQ");
-            ToastUtils.showToastView("请先安装QQ");
+            Toast.INSTANCE.show("请先安装QQ",null);
         }
     }
 
@@ -120,7 +121,7 @@ public class SharedUtils {
             sharedMsg(activity, title, "", txtConten, null, packageWX);
         } else {
             //ToastUtils.show(activity, "请先安装微信");
-            ToastUtils.showToastView("请先安装微信");
+            Toast.INSTANCE.show("请先安装微信",null);
         }
     }
 
@@ -138,7 +139,7 @@ public class SharedUtils {
             sharedMsg(activity, title, "", txtConten, null, packageWB);
         } else {
             //ToastUtils.show(activity, "请先安装微博");
-            ToastUtils.showToastView("请先安装微博");
+            Toast.INSTANCE.show("请先安装微博",null);
         }
     }
 
@@ -200,7 +201,8 @@ public class SharedUtils {
             share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             context.startActivity(Intent.createChooser(share, "分享文件"));
         } else {
-            ToastUtils.showToastView("分享文件不存在");
+            //ToastUtils.showToastView("分享文件不存在");
+            Toast.INSTANCE.show("分享文件不存在",null);
         }
     }
 
