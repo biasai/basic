@@ -55,11 +55,6 @@ dependencies {
     //约束布局
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 
-    //PictureSelector图片选择器的链接。另外在根目录里面还要添加 maven { url 'https://jitpack.io' }
-    //有很多版本，其他版本包括最新版感覺都有問題。暫時就用這個v2.1.0(比較穩定)
-    //此处在library中引用，如果module中引用不了，则再module中再引用一次即可。多次引用不会冲突的。
-    implementation 'com.github.LuckSiege.PictureSelector:picture_library:v2.1.0'
-
     //自己屏幕适配
     implementation 'com.github.biasai:px13334x750:v1.0.1'
 
