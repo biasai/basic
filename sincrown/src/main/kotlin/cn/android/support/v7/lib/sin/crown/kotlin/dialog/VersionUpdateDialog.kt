@@ -9,6 +9,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.NumberProgressBar
 import cn.android.support.v7.lib.sin.crown.utils.AppUtils
 import cn.android.support.v7.lib.sin.crown.utils.FileLoadUtils
+import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils
 import java.io.File
 
 /**
@@ -34,6 +35,7 @@ class VersionUpdateDialog(context: Activity) : BaseDialog(context, R.layout.crow
     }
 
     init {
+        ProportionUtils.getInstance().adapterWindow(context, dialog?.window)//适配
         //取消
         findViewById<View>(R.id.crown_txt_cancel).setOnClickListener {
             dismiss()
@@ -85,10 +87,17 @@ class VersionUpdateDialog(context: Activity) : BaseDialog(context, R.layout.crow
             }
 
         }
+        findViewById<TextView>(R.id.crown_txt_version_name)?.setText("发现新版本：" + BaseApplication.getInstance().versionName)
     }
 
-    override fun listener() {
-        findViewById<TextView>(R.id.crown_txt_version_name)?.setText("发现新版本：" + BaseApplication.getInstance().versionName)
+    override fun listener() {}
+
+    /**
+     * 更新版本号
+     */
+    fun setUpdateVersion(version: String): VersionUpdateDialog {
+        findViewById<TextView>(R.id.crown_txt_version_name)?.setText("发现新版本：" + version)
+        return this
     }
 
     /**
@@ -99,7 +108,7 @@ class VersionUpdateDialog(context: Activity) : BaseDialog(context, R.layout.crow
         return this
     }
 
-    override var isDismiss: Boolean=false//默认不消失
+    override var isDismiss: Boolean = false//默认不消失
 
     override fun recycleView() {}
 }

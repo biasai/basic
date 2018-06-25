@@ -7,12 +7,12 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="@dimen/y1"
+        android:layout_height="1px"
         android:background="#DADADA" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/y530"
+        android:layout_height="530px"
         android:background="#ffffff"
         android:clickable="true"
         android:gravity="center_horizontal"
@@ -36,16 +36,16 @@
                     android:id="@+id/crown_txt_start"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/y36"
+                    android:layout_marginTop="36px"
                     android:text="2018-05-01"
                     android:textColor="#3886C6"
-                    android:textSize="@dimen/x32" />
+                    android:textSize="32px" />
 
                 <View
                     android:id="@+id/crown_view_start"
-                    android:layout_width="@dimen/x188"
+                    android:layout_width="188px"
                     android:layout_height="0.8dp"
-                    android:layout_marginTop="@dimen/y6"
+                    android:layout_marginTop="6px"
                     android:background="#DADADA" />
 
 
@@ -54,10 +54,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/y15"
+                android:layout_marginTop="15px"
                 android:text="至"
                 android:textColor="#888888"
-                android:textSize="@dimen/x38" />
+                android:textSize="38px" />
 
             <LinearLayout
                 android:id="@+id/linearEend"
@@ -71,16 +71,16 @@
                     android:id="@+id/crown_txt_end"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/y36"
+                    android:layout_marginTop="36px"
                     android:text="2018-06-11"
                     android:textColor="#3886C6"
-                    android:textSize="@dimen/x32" />
+                    android:textSize="32px" />
 
                 <View
                     android:id="@+id/crown_view_end"
-                    android:layout_width="@dimen/x188"
+                    android:layout_width="188px"
                     android:layout_height="0.8dp"
-                    android:layout_marginTop="@dimen/y6"
+                    android:layout_marginTop="6px"
                     android:background="#DADADA" />
 
 
@@ -95,10 +95,10 @@
 
             <LinearLayout
                 android:id="@+id/date_start"
-                android:layout_width="@dimen/x522"
-                android:layout_height="@dimen/y250"
+                android:layout_width="522px"
+                android:layout_height="250px"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="@dimen/y50"
+                android:layout_marginTop="50px"
                 android:gravity="center"
                 android:orientation="horizontal">
 
@@ -111,10 +111,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/x30"
+                    android:layout_marginLeft="30px"
                     android:text="年"
                     android:textColor="#526F8F"
-                    android:textSize="@dimen/y36" />
+                    android:textSize="36px" />
 
                 <cn.android.support.v7.lib.sin.crown.view.RollerView
                     android:id="@+id/crown_roller_MM"
@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:text="月"
                     android:textColor="#526F8F"
-                    android:textSize="@dimen/y36" />
+                    android:textSize="36px" />
 
                 <cn.android.support.v7.lib.sin.crown.view.RollerView
                     android:id="@+id/crown_roller_dd"
@@ -140,17 +140,17 @@
                     android:layout_height="wrap_content"
                     android:text="日"
                     android:textColor="#526F8F"
-                    android:textSize="@dimen/y36" />
+                    android:textSize="36px" />
 
             </LinearLayout>
 
 
             <LinearLayout
                 android:id="@+id/date_end"
-                android:layout_width="@dimen/x522"
-                android:layout_height="@dimen/y250"
+                android:layout_width="522px"
+                android:layout_height="250px"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="@dimen/y50"
+                android:layout_marginTop="50px"
                 android:gravity="center"
                 android:orientation="horizontal">
 
@@ -163,10 +163,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/x30"
+                    android:layout_marginLeft="30px"
                     android:text="年"
                     android:textColor="#526F8F"
-                    android:textSize="@dimen/y36" />
+                    android:textSize="36px" />
 
                 <cn.android.support.v7.lib.sin.crown.view.RollerView
                     android:id="@+id/crown_roller_MM2"
@@ -179,7 +179,7 @@
                     android:layout_height="wrap_content"
                     android:text="月"
                     android:textColor="#526F8F"
-                    android:textSize="@dimen/y36" />
+                    android:textSize="36px" />
 
                 <cn.android.support.v7.lib.sin.crown.view.RollerView
                     android:id="@+id/crown_roller_dd2"
@@ -192,7 +192,7 @@
                     android:layout_height="wrap_content"
                     android:text="日"
                     android:textColor="#526F8F"
-                    android:textSize="@dimen/y36" />
+                    android:textSize="36px" />
 
             </LinearLayout>
 
@@ -209,19 +209,19 @@
                 android:id="@+id/crown_txt_cancel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="@dimen/x42"
+                android:layout_marginRight="42px"
                 android:text="取消"
                 android:textColor="#3886C6"
-                android:textSize="@dimen/y32" />
+                android:textSize="32px" />
 
             <TextView
                 android:id="@+id/crown_txt_ok"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="@dimen/x42"
+                android:layout_marginRight="42px"
                 android:text="完成"
                 android:textColor="#3886C6"
-                android:textSize="@dimen/y32" />
+                android:textSize="32px" />
 
         </LinearLayout>
 

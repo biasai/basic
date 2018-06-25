@@ -7,6 +7,8 @@ import android.widget.TextView
 import cn.android.support.v7.lib.sin.crown.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
 import cn.android.support.v7.lib.sin.crown.kotlin.bean.DateChoose
+import cn.android.support.v7.lib.sin.crown.kotlin.common.px
+import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils
 import cn.android.support.v7.lib.sin.crown.utils.TimeUtils
 import cn.android.support.v7.lib.sin.crown.view.RollerView
 
@@ -65,6 +67,7 @@ class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose
     }
 
     init {
+        ProportionUtils.getInstance().adapterWindow(context, dialog?.window)//适配
         dialog?.window?.setWindowAnimations(R.style.crown_window_bottom)//动画
         //取消
         findViewById<View>(R.id.crown_txt_cancel).setOnClickListener {
@@ -92,9 +95,9 @@ class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose
         for (i in 2010..2030) {
             list_yyyy.add(i.toString())
         }
-        yyyy.setLineColor(Color.TRANSPARENT).setItems(list_yyyy).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        yyyy.setLineColor(Color.TRANSPARENT).setItems(list_yyyy).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#888888")).setSelectTextColor(Color.parseColor("#444444"))
-        yyyy2.setLineColor(Color.TRANSPARENT).setItems(list_yyyy).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        yyyy2.setLineColor(Color.TRANSPARENT).setItems(list_yyyy).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#888888")).setSelectTextColor(Color.parseColor("#444444"))
         //监听
         yyyy.setItemSelectListener(object : RollerView.ItemSelectListener {
@@ -118,7 +121,7 @@ class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose
         for (i in 1..12) {
             list_MM.add(i.toString())
         }
-        MM.setLineColor(Color.TRANSPARENT).setItems(list_MM).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        MM.setLineColor(Color.TRANSPARENT).setItems(list_MM).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#888888")).setSelectTextColor(Color.parseColor("#444444"))
         MM.setItemSelectListener(object : RollerView.ItemSelectListener {
             override fun onItemSelect(item: String?, position: Int) {
@@ -130,7 +133,7 @@ class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose
                 updateDays()
             }
         })
-        MM2.setLineColor(Color.TRANSPARENT).setItems(list_MM).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        MM2.setLineColor(Color.TRANSPARENT).setItems(list_MM).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#888888")).setSelectTextColor(Color.parseColor("#444444"))
         MM2.setItemSelectListener(object : RollerView.ItemSelectListener {
             override fun onItemSelect(item: String?, position: Int) {
@@ -143,9 +146,9 @@ class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose
             }
         })
         //日
-        dd.setLineColor(Color.TRANSPARENT).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        dd.setLineColor(Color.TRANSPARENT).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#888888")).setSelectTextColor(Color.parseColor("#444444"))
-        dd2.setLineColor(Color.TRANSPARENT).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        dd2.setLineColor(Color.TRANSPARENT).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#888888")).setSelectTextColor(Color.parseColor("#444444"))
         dd.setItemSelectListener(object : RollerView.ItemSelectListener {
             override fun onItemSelect(item: String?, position: Int) {

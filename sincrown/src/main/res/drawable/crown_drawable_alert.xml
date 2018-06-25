@@ -8,10 +8,10 @@
         android:endColor="#FFFFFF"
         android:startColor="#FFFFFF" />
     <corners
-        android:bottomLeftRadius="@dimen/x16"
-        android:bottomRightRadius="@dimen/x16"
-        android:topLeftRadius="@dimen/x16"
-        android:topRightRadius="@dimen/x16" />
+        android:bottomLeftRadius="16dp"
+        android:bottomRightRadius="16dp"
+        android:topLeftRadius="16dp"
+        android:topRightRadius="16dp" />
     <padding
         android:bottom="0dp"
         android:left="0dp"

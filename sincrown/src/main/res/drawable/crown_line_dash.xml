@@ -3,10 +3,10 @@
     android:shape="line">
 
     <stroke
-        android:width="@dimen/y2"
+        android:width="1dp"
         android:color="#E5E5E5"
-        android:dashGap="@dimen/x6"
-        android:dashWidth="@dimen/x12" />
+        android:dashGap="2dp"
+        android:dashWidth="4dp" />
 
 
 </shape>

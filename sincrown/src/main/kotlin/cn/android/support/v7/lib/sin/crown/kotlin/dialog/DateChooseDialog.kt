@@ -6,6 +6,8 @@ import android.view.View
 import cn.android.support.v7.lib.sin.crown.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
 import cn.android.support.v7.lib.sin.crown.kotlin.bean.DateChoose
+import cn.android.support.v7.lib.sin.crown.kotlin.common.px
+import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils
 import cn.android.support.v7.lib.sin.crown.utils.TimeUtils
 import cn.android.support.v7.lib.sin.crown.view.RollerView
 
@@ -23,6 +25,7 @@ class DateChooseDialog(context: Activity, var dateChoose: DateChoose=DateChoose(
     val dd: RollerView by lazy { findViewById<RollerView>(R.id.crown_roller_dd) }
 
     init {
+        ProportionUtils.getInstance().adapterWindow(context,dialog?.window)//适配
         dialog?.window?.setWindowAnimations(R.style.crown_window_bottom)//动画
         //取消
         findViewById<View>(R.id.crown_txt_cancel).setOnClickListener {
@@ -37,14 +40,14 @@ class DateChooseDialog(context: Activity, var dateChoose: DateChoose=DateChoose(
         for (i in 2010..2030) {
             list_yyyy.add(i.toString())
         }
-        yyyy.setLineColor(Color.TRANSPARENT).setItems(list_yyyy).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        yyyy.setLineColor(Color.TRANSPARENT).setItems(list_yyyy).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#444444")).setSelectTextColor(Color.parseColor("#444444"))
         //月
         var list_MM = ArrayList<String>()
         for (i in 1..12) {
             list_MM.add(i.toString())
         }
-        MM.setLineColor(Color.TRANSPARENT).setItems(list_MM).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        MM.setLineColor(Color.TRANSPARENT).setItems(list_MM).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#444444")).setSelectTextColor(Color.parseColor("#444444"))
         MM.setItemSelectListener(object : RollerView.ItemSelectListener {
             override fun onItemSelect(item: String?, position: Int) {
@@ -53,7 +56,7 @@ class DateChooseDialog(context: Activity, var dateChoose: DateChoose=DateChoose(
             }
         })
         //日
-        dd.setLineColor(Color.TRANSPARENT).setTextSize(context.resources.getDimension(R.dimen.y40)).setCount(5)
+        dd.setLineColor(Color.TRANSPARENT).setTextSize(px.x(40f)).setCount(5)
                 .setDefaultTextColor(Color.parseColor("#444444")).setSelectTextColor(Color.parseColor("#444444"))
 
         //fixme 设置数据滚轮循环效果

@@ -11,6 +11,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
 import cn.android.support.v7.lib.sin.crown.kotlin.https.Bitmaps
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.DotsView
 import cn.android.support.v7.lib.sin.crown.utils.AssetsUtils
+import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils
 
 /**
  * 网络位图放大显示
@@ -23,6 +24,7 @@ class ViewPagerDialog(var activity: Activity?) : BaseDialog(activity, R.layout.c
     val dots: DotsView by lazy { findViewById<DotsView>(R.id.dots) }
 
     init {
+        ProportionUtils.getInstance().adapterWindow(activity,dialog?.window)//适配
         viewPager.adapter = adapter
         //动画，大小渐变
         setWindowAnimations(R.style.crown_window_samll_large)

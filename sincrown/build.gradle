@@ -55,9 +55,6 @@ dependencies {
     //约束布局
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 
-    //自己屏幕适配
-    implementation 'com.github.biasai:px13334x750:v1.0.1'
-
     //集成kotlin的依赖。
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.1'
