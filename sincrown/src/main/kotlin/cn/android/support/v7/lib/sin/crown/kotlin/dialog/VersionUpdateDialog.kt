@@ -16,7 +16,7 @@ import java.io.File
  * 版本更新
  * 使用说明：VersionUpdateDialog(this).setUrl(url).setSrcFileName("app名称带后缀（如果为null或""空，会自动获取网络上的名称）.apk")
  */
-class VersionUpdateDialog(context: Activity) : BaseDialog(context, R.layout.crown_dialog_version_update) {
+class VersionUpdateDialog(context: Activity, isStatus: Boolean = true, isTransparent: Boolean = true) : BaseDialog(context, R.layout.crown_dialog_version_update,isStatus,isTransparent) {
     //进度条
     val numprogressbar: NumberProgressBar by lazy { findViewById<NumberProgressBar>(R.id.numprogressbar) }
     //apk下载链接
@@ -88,6 +88,7 @@ class VersionUpdateDialog(context: Activity) : BaseDialog(context, R.layout.crow
 
         }
         findViewById<TextView>(R.id.crown_txt_version_name)?.setText("发现新版本：" + BaseApplication.getInstance().versionName)
+        isDismiss(false)
     }
 
     override fun listener() {}
@@ -107,8 +108,6 @@ class VersionUpdateDialog(context: Activity) : BaseDialog(context, R.layout.crow
         findViewById<TextView>(R.id.crown_txt_version_content)?.setText(content)
         return this
     }
-
-    override var isDismiss: Boolean = false//默认不消失
 
     override fun recycleView() {}
 }

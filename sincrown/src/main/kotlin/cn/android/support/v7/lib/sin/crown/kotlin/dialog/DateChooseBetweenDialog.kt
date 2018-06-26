@@ -20,7 +20,7 @@ import cn.android.support.v7.lib.sin.crown.view.RollerView
 //            DateChooseBetweenDialog(this, DateChoose(), DateChoose()).setCallBack { dateChooseStart, dateChooseEnd ->
 //                Log.e("test", "回调\t开始日期:\t" + dateChooseStart.toString() + "\t结束日期:\t" + dateChooseEnd.toString())
 //            }.end()//选择结束日期
-class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose = DateChoose(), var dateChooseEnd: DateChoose = DateChoose()) : BaseDialog(context, R.layout.crown_dialog_date_choose_between) {
+class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose = DateChoose(), var dateChooseEnd: DateChoose = DateChoose(), isStatus: Boolean = true, isTransparent: Boolean = true) : BaseDialog(context, R.layout.crown_dialog_date_choose_between,isStatus,isTransparent) {
     val yyyy: RollerView by lazy { findViewById<RollerView>(R.id.crown_roller_yyyy) }
     val MM: RollerView by lazy { findViewById<RollerView>(R.id.crown_roller_MM) }
     val dd: RollerView by lazy { findViewById<RollerView>(R.id.crown_roller_dd) }
@@ -176,6 +176,8 @@ class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose
         yyyy2.isCyclic = true
         MM2.isCyclic = true
         dd2.isCyclic = true
+
+        isDismiss(true)
     }
 
     fun updateDays() {
@@ -213,9 +215,6 @@ class DateChooseBetweenDialog(context: Activity, var dateChooseStart: DateChoose
 
     override fun recycleView() {
     }
-
-    override val isTransparent: Boolean
-        get() = true
 
     //日期返回回调
     fun setCallBack(callbak: (dateChooseStart: DateChoose, dateChooseEnd: DateChoose) -> Unit): DateChooseBetweenDialog {

@@ -19,7 +19,7 @@ import cn.android.support.v7.lib.sin.crown.view.RollerView
 //var dateChoose = DateChoose()
 //val dateChooseDialog:DateChooseDialog by lazy { DateChooseDialog(this, dateChoose).setCallBack { dateChoose = it }}
 //dateChooseDialog.show()
-class DateChooseDialog(context: Activity, var dateChoose: DateChoose=DateChoose()) : BaseDialog(context, R.layout.crown_dialog_date_choose) {
+class DateChooseDialog(context: Activity, var dateChoose: DateChoose=DateChoose(), isStatus: Boolean = true, isTransparent: Boolean = true) : BaseDialog(context, R.layout.crown_dialog_date_choose,isStatus,isTransparent) {
     val yyyy: RollerView by lazy { findViewById<RollerView>(R.id.crown_roller_yyyy) }
     val MM: RollerView by lazy { findViewById<RollerView>(R.id.crown_roller_MM) }
     val dd: RollerView by lazy { findViewById<RollerView>(R.id.crown_roller_dd) }
@@ -63,6 +63,8 @@ class DateChooseDialog(context: Activity, var dateChoose: DateChoose=DateChoose(
         yyyy.isCyclic = true
         MM.isCyclic = true
         dd.isCyclic = true
+
+        isDismiss(true)
     }
 
     fun updateDays() {
@@ -85,9 +87,6 @@ class DateChooseDialog(context: Activity, var dateChoose: DateChoose=DateChoose(
 
     override fun recycleView() {
     }
-
-    override val isTransparent: Boolean
-        get() = true
 
     //日期返回回调
     fun setCallBack(callbak: (dateChoose: DateChoose) -> Unit): DateChooseDialog {

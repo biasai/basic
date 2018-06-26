@@ -17,7 +17,7 @@ import org.jetbrains.anko.*
 //            }.negative("NO"){
 //                ToastUtils.showToastView("NO!!!")
 //            }.isDismiss(false).show()
-class AlertDialog(activity: Activity) : BaseDialog(activity) {
+class AlertDialog(activity: Activity, isStatus: Boolean = true, isTransparent: Boolean = true) : BaseDialog(activity,isStatus = isStatus,isTransparent = true) {
 
     override fun onCreateView(context: Context): View? {
         return context.UI {
@@ -136,9 +136,9 @@ class AlertDialog(activity: Activity) : BaseDialog(activity) {
         positive.setOnClickListener {
             dismiss()
         }
+        isDismiss(false)//默认不消失
     }
 
-    override var isDismiss: Boolean = false//默认不消失
 
     override fun listener() {
         container.layoutParams.width = px.x(500)

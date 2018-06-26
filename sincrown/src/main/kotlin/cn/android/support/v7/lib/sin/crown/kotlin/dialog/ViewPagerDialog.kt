@@ -16,7 +16,7 @@ import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils
 /**
  * 网络位图放大显示
  */
-class ViewPagerDialog(var activity: Activity?) : BaseDialog(activity, R.layout.crown_dialog_viewpager) {
+class ViewPagerDialog(var activity: Activity?, isStatus: Boolean = false, isTransparent: Boolean = true) : BaseDialog(activity, R.layout.crown_dialog_viewpager,isStatus,isTransparent) {
 
     val viewPager: ViewPager by lazy { findViewById<ViewPager>(R.id.crown_viewpager) }
     val adapter: MyPagerAdapter by lazy { MyPagerAdapter(this) }
@@ -38,9 +38,9 @@ class ViewPagerDialog(var activity: Activity?) : BaseDialog(activity, R.layout.c
                 dots.selectPosition(position).invalidate()
             }
         })
+        isDismiss(false)
     }
 
-    override var isDismiss: Boolean = false//默认不消失
     override fun listener() {
         adapter.notifyDataSetChanged()
         viewPager.currentItem = currentItem
@@ -77,14 +77,6 @@ class ViewPagerDialog(var activity: Activity?) : BaseDialog(activity, R.layout.c
         dots.selectPosition(currentItem).invalidate()
         return this
     }
-
-    //透明
-    override val isTransparent: Boolean
-        get() = true
-
-    //没有状态栏，全屏
-    override val isStatus: Boolean
-        get() = false
 
     class MyPagerAdapter(var dialog: ViewPagerDialog?, var uris: MutableList<String> = mutableListOf()) : PagerAdapter() {
 

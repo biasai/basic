@@ -7,20 +7,22 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
 import android.support.v4.view.ViewPager
-import android.view.Gravity
-import android.view.KeyEvent
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import android.view.WindowManager
+import android.view.*
 import cn.android.support.v7.lib.sin.crown.R
 
+//    子类初始化参考
+//    init {
+//        isDarkmode(true).isDismiss(false).isLocked(true) {
+//            Log.e("ui", "返回键按下监听")
+//        }
+//    }
 
 /**
  * @author 彭治铭
  */
-abstract class BaseDialog(activity: Activity?, layoutId: Int = 0) {
+//fixme isStatus 是否显示状态栏【true会显示状态栏，false不会显示状态栏】,默认有状态栏
+//fixme isTransparent 背景是否透明,true透明，false背景会有遮罩层半透明的效果。默认背景透明
+abstract class BaseDialog(activity: Activity?, layoutId: Int = 0, isStatus: Boolean = true, isTransparent: Boolean = true) {
     //fixme Activity不要使用全局变量。局部即可。防止内存泄露
     //fixme 不要使用单列模式，一个Activity就对应一个Dialog。（Dialog需要Activity的支持）
     internal var dialog: Dialog? = null
@@ -29,6 +31,54 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0) {
     open fun onCreateView(context: Context): View? {
         //return UI { }.view//使用Anko布局
         return null
+    }
+
+    //fixme 手动设置状态栏字体颜色(true黑色(深色，默认)，false白色(浅色)。)[亲测有效]
+    fun isDarkmode(isDarkmode: Boolean = BaseApplication.getInstance().darkmode): BaseDialog {
+        BaseApplication.getInstance().setStatusBarDrak(dialog!!.window, isDarkmode)
+        return this
+    }
+
+    //fixme 触摸最外层控件，弹窗是否消失。
+    fun isDismiss(isDismiss: Boolean = true): BaseDialog {
+        //触摸最外层控件，是否消失\
+        dialog?.window.let {
+            if (isDismiss) {
+                getParentView(it)?.setOnTouchListener { view, motionEvent ->
+                    if (motionEvent.action == MotionEvent.ACTION_DOWN) {
+                        dismiss()
+                    }
+                    true
+                }
+            } else {
+                getParentView(it)?.setOnTouchListener(null)
+            }
+        }
+        return this
+    }
+
+
+    //fixme true屏蔽返回键，false不屏蔽返回键。
+    //fixme 是否屏蔽返回键+监听返回键（只监听返回键按下。）
+    fun isLocked(isLocked: Boolean = true, callback: (() -> Unit)? = null): BaseDialog {
+        //屏蔽返回键,并且监听返回键（只监听返回键按下。）
+        dialog?.setOnKeyListener { dialog, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
+                callback?.let {
+                    it()//监听返回键(按下)
+                }
+                isLocked//true,已经处理(屏蔽)，false没有处理，系统会自行处理。
+            } else {
+                false//返回false，不屏蔽
+                //返回键以外交给系统自行处理。不可以屏蔽，不然输入法键盘的按键可能无效。如删除键
+            }
+        }
+        return this
+    }
+
+    //fixme 为Window设置动画【Dialog和PopuWindow动画都是Style文件】
+    fun setWindowAnimations(styleId: Int) {
+        dialog?.window?.setWindowAnimations(styleId);
     }
 
     init {
@@ -52,24 +102,10 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0) {
                 styleTheme = R.style.crownBaseDialogFull
             }
         }
+        //fixme Dialog主题，必须在构造函数中传入才有效，其他地方设置主题无效。只有构造函数中才有效。
         dialog = object : Dialog(activity!!, styleTheme) {
             override fun onAttachedToWindow() {
                 super.onAttachedToWindow()
-                //设置弹窗状态栏字体颜色。【必须在dialog显示出来之后，调用才有效。】
-                BaseApplication.getInstance().setStatusBarDrak(dialog!!.window, isDarkmode)
-                //按键屏蔽，每次都重新设置
-                this@BaseDialog.setOnKeyListener(isLocked)
-                //触摸最外层控件，是否消失
-                if (isDismiss) {
-                    getParentView(dialog!!.window)?.setOnTouchListener { view, motionEvent ->
-                        if (motionEvent.action == MotionEvent.ACTION_DOWN) {
-                            dismiss()
-                        }
-                        true
-                    }
-                } else {
-                    getParentView(dialog!!.window)?.setOnTouchListener(null)
-                }
                 //附加到窗口,每次显示的时候都会调用
                 listener()
             }
@@ -80,7 +116,6 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0) {
                 recycleView()
             }
         }
-
         var window = dialog!!.window
         if (Build.VERSION.SDK_INT < 19) {
             //低版本显示窗体，必须在window.setContentView之前调用一次。其后就可随便调show()了。
@@ -137,46 +172,6 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0) {
             //Log.e("test", "状态栏异常:\t" + e.getMessage());
         }
         //==========================================================================================结束
-    }
-
-    //为Window设置动画【Dialog和PopuWindow动画都是Style文件】
-    fun setWindowAnimations(styleId: Int) {
-        dialog?.window?.setWindowAnimations(styleId);
-    }
-
-    //是否显示状态栏【true会显示状态栏，false不会显示状态栏】
-    //与Activity是否有状态栏无关。Dialog可以自己控制自己是否显示状态栏。即使Acitivy全屏，Dilog也可以有自己的状态栏。亲测
-    open protected val isStatus: Boolean
-        get() = true
-
-    //重写状态栏字体的颜色，true黑色，false白色。这个方法值会赋值给Darkmode。
-    //一般默认就写 BaseApplication.getInstance().darkmode;即可
-    open protected var isDarkmode: Boolean = BaseApplication.getInstance().darkmode
-
-    //fixme 手动设置状态栏字体颜色(true黑色(深色，默认)，false白色(浅色)。)
-    fun darkmode(isDarkmode: Boolean = BaseApplication.getInstance().darkmode): BaseDialog {
-        this.isDarkmode = isDarkmode;
-        return this
-    }
-
-    //背景是否透明,true透明，false背景会有遮罩层半透明的效果。
-    open protected val isTransparent: Boolean
-        get() = false
-
-    //触摸最外层控件，弹窗是否消失。默认会消失。
-    open public var isDismiss: Boolean = true
-
-    //fixme 触摸最外层控件，弹窗是否消失。默认会消失。
-    fun isDismiss(isDismiss: Boolean = true): BaseDialog {
-        this.isDismiss = isDismiss
-        return this
-    }
-
-    //true屏蔽返回键，false不屏蔽返回键。默认生成的方法，返回的都是false。即默认就是false，不屏蔽
-    open public var isLocked: Boolean = false
-    fun isLocked(isLocked: Boolean=true):BaseDialog{
-        this.isLocked=isLocked
-        return this
     }
 
     //获取xml文件最外层控件。
@@ -247,22 +242,5 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0) {
         }
     }
 
-
-    //捕捉屏蔽返回键
-    private fun setOnKeyListener(locked: Boolean) {
-        if (locked) {
-            //屏蔽
-            dialog!!.setOnKeyListener { dialog, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
-                    true//记得返回true。表示已经处理。
-                } else {
-                    false
-                    //返回键以外交给系统自行处理。不可以屏蔽，不然输入法键盘的按键可能无效。如删除键
-                }
-            }
-        } else {
-            //不屏蔽
-            dialog!!.setOnKeyListener(null)
-        }
-    }
 }
+
