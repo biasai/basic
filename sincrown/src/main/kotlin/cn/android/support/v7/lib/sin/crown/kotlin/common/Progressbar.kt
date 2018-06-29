@@ -13,7 +13,7 @@ import org.jetbrains.anko.verticalLayout
  * 进度条
  * Created by 彭治铭 on 2018/6/24.
  */
-class Progressbar(activity: Activity) : BaseDialog(activity) {
+class Progressbar(activity: Activity, isStatus: Boolean = true, isTransparent: Boolean = false) : BaseDialog(activity, isStatus = isStatus, isTransparent = isTransparent) {
 
     override fun onCreateView(context: Context): View? {
         return context.UI {

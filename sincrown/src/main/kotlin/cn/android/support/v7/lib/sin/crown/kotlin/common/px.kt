@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.pm.ActivityInfo
 import android.util.DisplayMetrics
 import android.util.Log
+import android.view.View
 
 object px {
     var statusHeight = 0//状态栏高度
@@ -58,7 +59,7 @@ object px {
 
     //初始化，基准宽或高，发生变化时(以竖屏为标准)，可以手动调用，重新初始化
     //fixme 注意：以竖屏为标准，宽度比高度小(高度大于宽度)
-    fun init(baseWidth: Float=750f, baseHeight: Float=1334f) {
+    fun init(baseWidth: Float = 750f, baseHeight: Float = 1334f) {
         this.baseWidth = baseWidth
         this.baseHeight = baseHeight
         //真实值
@@ -146,6 +147,35 @@ object px {
 
     fun textSizeY(y: Int): Float {
         return pixelToDp(y(y.toFloat()))
+    }
+
+    //与屏幕边缘左边的距离
+    fun left(view: View): Int {
+        //获取现对于整个屏幕的位置。
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        return location[0]
+    }
+
+    //与屏幕边缘右边的距离
+    fun right(view: View): Int {
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        return (realWidth - location[0] - view.width).toInt()
+    }
+
+    //与屏幕边缘上边的距离
+    fun top(view: View): Int {
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        return location[1]
+    }
+
+    //与屏幕边缘下边的距离
+    fun bottom(view: View): Int {
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        return (realHeight - location[1] - view.height).toInt()
     }
 
     //Dp转像素
