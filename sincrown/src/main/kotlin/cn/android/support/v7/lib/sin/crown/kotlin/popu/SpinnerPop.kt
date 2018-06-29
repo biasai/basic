@@ -80,7 +80,7 @@ class SpinnerPop(var context: Context, var list: MutableList<*>) {
             pop?.showAsDropDown(it, xoff, yoff)//fixme xoff 和 yoff是偏移量。
             //数据刷新
             if (list.size > 1) {
-                recyclerView?.adapter?.notifyItemRangeChanged(0, list.size - 1)
+                recyclerView?.adapter?.notifyItemRangeChanged(0, list.size)
             } else {
                 recyclerView?.adapter?.notifyItemChanged(0)
             }
