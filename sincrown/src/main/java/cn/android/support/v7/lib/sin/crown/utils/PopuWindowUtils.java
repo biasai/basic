@@ -3,10 +3,11 @@ package cn.android.support.v7.lib.sin.crown.utils;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
+
+import cn.android.support.v7.lib.sin.crown.kotlin.common.px;
 
 /**
  * Created by 彭治铭 on 2017/10/9.
@@ -43,19 +44,39 @@ public class PopuWindowUtils {
      * @param styleAnim   动画
      * @return 返回 PopupWindow，位置显示自己去调用showAtLocation(),showAsDropDown(),自己决定。
      */
-    public PopupWindow showPopuWindow(View contentView, int styleAnim) {
+    public PopupWindow showPopuWindow(final View contentView, int styleAnim) {
         //AlertDialog是非阻塞线程的，而PopupWindow是阻塞线程的
         PopupWindow popupWindow = new PopupWindow() {
             @Override
             public void showAsDropDown(View anchor) {
                 //解决7.0显示不正确的问题，7.0以下和7.1都没有问题。
-                if (Build.VERSION.SDK_INT == 24) {
-                    Rect rect = new Rect();
-                    anchor.getGlobalVisibleRect(rect);
-                    int h = anchor.getResources().getDisplayMetrics().heightPixels - rect.bottom;
-                    setHeight(h);
+                //fixme 防止异常，popuwindow设置成固定高度。
+                //if (Build.VERSION.SDK_INT == 24) {
+                Rect rect = new Rect();
+                anchor.getGlobalVisibleRect(rect);
+                int h = anchor.getResources().getDisplayMetrics().heightPixels - rect.bottom;
+                int off = px.INSTANCE.y(10);//与屏幕底部边缘，留10像素的空隙
+                if (h > off) {
+                    h -= off;
                 }
+                setHeight(h);//设置popuwind的高度（当前view到屏幕底部的距离），这个是popuwindow的高度，不是容器contentView的高度。确是contentView的最大高度。
+                //}
+                //fixme popuwindow的高度不等于contentView的高度。确是contentView的最大高度。
+                //popwindow的高度必须在显示之前设置才有效。
                 super.showAsDropDown(anchor);
+            }
+
+            @Override
+            public void showAsDropDown(View anchor, int xoff, int yoff) {
+                Rect rect = new Rect();
+                anchor.getGlobalVisibleRect(rect);
+                int h = anchor.getResources().getDisplayMetrics().heightPixels - rect.bottom - yoff;
+                int off = px.INSTANCE.y(10);
+                if (h > off) {
+                    h -= off;
+                }
+                setHeight(h);
+                super.showAsDropDown(anchor, xoff, yoff);
             }
         };
         //View myView=LayoutInflater.from(this).inflate(R.layout.recyclerview_item_empty,null);

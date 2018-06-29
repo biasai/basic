@@ -105,6 +105,14 @@
     <!--仅去掉标题栏,不全屏,不透明-->
     <style name="crownNoTitleBar" parent="@android:style/Theme.NoTitleBar" />
 
+    <!-- Window级别 动画，适用于Dialog和PopuWindow (下拉列表动画)-->
+    <style name="crown_window_alpha_scale_drop" mce_bogus="1" parent="android:Animation">
+        <item name="android:windowEnterAnimation">@anim/crown_alpha_scale_drop_down_in</item>
+        <!-- 进入动画，逐渐显示出来+ 下拉-->
+        <item name="android:windowExitAnimation">@anim/crown_alpha_scale_drop_up_out</item>
+        <!-- 退出动画 ，逐渐消失,变透明+上拉-->
+    </style>
+
     <!-- Window级别 动画，适用于Dialog和PopuWindow -->
     <style name="crown_window_alpha" mce_bogus="1" parent="android:Animation">
         <item name="android:windowEnterAnimation">@anim/crown_alpha_in</item>
