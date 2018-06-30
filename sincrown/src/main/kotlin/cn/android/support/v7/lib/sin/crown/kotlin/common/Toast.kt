@@ -59,22 +59,24 @@ object Toast {
 //    }
 
     //显示文本
-    fun show(text: String, init: ((textView: RoundTextView) -> Unit)? = null) {
-        default()
-        if (toast == null) {
-            toast = Toast(BaseApplication.getInstance())
-            toast?.setDuration(Toast.LENGTH_SHORT)// 显示时长，1000为1秒
-            val view = view()
-            toast?.setView(view)// 自定义view
+    fun show(text: String?, init: ((textView: RoundTextView) -> Unit)? = null) {
+        text?.let {
             default()
-        }
-        init?.let {
-            textView?.let {
-                init(it)//可根据需求自定义样式
+            if (toast == null) {
+                toast = Toast(BaseApplication.getInstance())
+                toast?.setDuration(Toast.LENGTH_SHORT)// 显示时长，1000为1秒
+                val view = view()
+                toast?.setView(view)// 自定义view
+                default()
             }
+            init?.let {
+                textView?.let {
+                    init(it)//可根据需求自定义样式
+                }
+            }
+            toast?.setGravity(Gravity.CENTER or Gravity.BOTTOM, 0, yOffset)// 显示位置
+            textView?.setText(text)
+            toast?.show()
         }
-        toast?.setGravity(Gravity.CENTER or Gravity.BOTTOM, 0, yOffset)// 显示位置
-        textView?.setText(text)
-        toast?.show()
     }
 }
