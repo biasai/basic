@@ -23,16 +23,18 @@ import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 object SelectorUtils {
     /**
      * NormalID 默认背景图片id
-     * SelectID 选中(或按下)时背景图片id
+     * PressID 按下背景图片id
+     * SelectID 选中(默认和按下相同)时背景图片id
      */
-    fun selectorDrawable(view: View, NormalID: Int, SelectID: Int) {
+    fun selectorDrawable(view: View, NormalID: Int, PressID: Int, SelectID: Int = PressID) {
         val drawable = StateListDrawable()
         var drawableNormal = px.context()?.resources?.getDrawable(NormalID)
+        var drawablePress = px.context()?.resources?.getDrawable(PressID)
         var drawableSelect = px.context()?.resources?.getDrawable(SelectID)
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下
-        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawableSelect)
+        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
         //选中
         drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
         drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
@@ -49,16 +51,18 @@ object SelectorUtils {
 
     /**
      * NormalBtmap 默认背景位图
-     * SelectBitmap 选中(或按下)时背景位图
+     * PressBitmap 按下时背景位图
+     * SelectBitmap 选中(默认和按下相同)时背景位图
      */
-    fun selectorDrawable(view: View, NormalBtmap: Bitmap, SelectBitmap: Bitmap) {
+    fun selectorDrawable(view: View, NormalBtmap: Bitmap, PressBitmap: Bitmap, SelectBitmap: Bitmap = PressBitmap) {
         val drawable = StateListDrawable()
-        var drawableSelect = BitmapDrawable(SelectBitmap)
         var drawableNormal = BitmapDrawable(NormalBtmap)
+        var drawablePress = BitmapDrawable(PressBitmap)
+        var drawableSelect = BitmapDrawable(SelectBitmap)
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下
-        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawableSelect)
+        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
         //选中
         drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
         drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
@@ -76,16 +80,18 @@ object SelectorUtils {
 
     /**
      * NormalColor 正常背景颜色值
-     * SelectColor 选中(或按下)背景颜色值
+     * PressColor  按下正常背景颜色值
+     * SelectColor 选中(默认和按下相同)背景颜色值
      */
-    fun selectorColor(view: View, NormalColor: Int, SelectColor: Int) {
+    fun selectorColor(view: View, NormalColor: Int, PressColor: Int, SelectColor: Int = PressColor) {
         val drawable = StateListDrawable()
         var drawableNormal = ColorDrawable(NormalColor)
+        var drawablePress = ColorDrawable(PressColor)
         var drawableSelect = ColorDrawable(SelectColor)
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下
-        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawableSelect)
+        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
         //选中
         drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
         drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
@@ -102,16 +108,18 @@ object SelectorUtils {
 
     /**
      * NormalColor 正常背景颜色值
-     * SelectColor 选中(或按下)背景颜色值
+     * PressColor  按下背景颜色值
+     * SelectColor 选中(默认和按下时相同)背景颜色值
      */
-    fun selectorColor(view: View, NormalColor: String, SelectColor: String) {
+    fun selectorColor(view: View, NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
         val drawable = StateListDrawable()
         var drawableNormal = ColorDrawable(Color.parseColor(NormalColor))
+        var drawablePress = ColorDrawable(Color.parseColor(PressColor))
         var drawableSelect = ColorDrawable(Color.parseColor(SelectColor))
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下
-        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawableSelect)
+        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
         //选中
         drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
         drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
@@ -128,10 +136,11 @@ object SelectorUtils {
 
     /**
      * NormalColor 正常字体颜色值
-     * SelectColor 选中(或按下)字体颜色值
+     * PressColor  按下时字体颜色值
+     * SelectColor 选中(默认和按下相同)字体颜色值
      */
-    fun selectorTextColor(view: View, NormalColor: Int, SelectColor: Int) {
-        val colors = intArrayOf(SelectColor, SelectColor, SelectColor, NormalColor)
+    fun selectorTextColor(view: View, NormalColor: Int, PressColor: Int, SelectColor: Int = PressColor) {
+        val colors = intArrayOf(PressColor, SelectColor, SelectColor, NormalColor)
         val states = arrayOfNulls<IntArray>(4)
         //fixme 以下顺序很重要。特别是最后一个，普通效果。必须放在最后一个，不然可能没有效果。
         states[0] = intArrayOf(android.R.attr.state_pressed)//按下
@@ -147,10 +156,11 @@ object SelectorUtils {
 
     /**
      * NormalColor 正常字体颜色值
-     * SelectColor 选中(或按下)  字体颜色值
+     * PressColor  按下时颜色值
+     * SelectColor 选中(默认和按下时相同)  字体颜色值
      */
-    fun selectorTextColor(view: View, NormalColor: String, SelectColor: String) {
-        val colors = intArrayOf(Color.parseColor(SelectColor), Color.parseColor(SelectColor), Color.parseColor(SelectColor), Color.parseColor(NormalColor))
+    fun selectorTextColor(view: View, NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
+        val colors = intArrayOf(Color.parseColor(PressColor), Color.parseColor(SelectColor), Color.parseColor(SelectColor), Color.parseColor(NormalColor))
         val states = arrayOfNulls<IntArray>(4)
         //fixme 以下顺序很重要。特别是最后一个，普通效果。必须放在最后一个，不然可能没有效果。
         states[0] = intArrayOf(android.R.attr.state_pressed)//按下
