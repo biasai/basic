@@ -12,7 +12,7 @@ import org.json.JSONObject
 object JSonUtils {
 
     //fixme java实体类必须有setter()方法。
-    //fixme kotlin 属性，不能被internal
+    //fixme kotlin 属性，不能被internal修饰。
 
     //var clazz = 对象.javaClass
     //调用 getBean(jsonObject, clazz)!! 后面的感叹号是发生异常时会抛出异常。kotlin不强制捕捉异常。
