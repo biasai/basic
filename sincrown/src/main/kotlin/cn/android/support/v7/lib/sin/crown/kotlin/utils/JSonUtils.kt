@@ -11,6 +11,9 @@ import org.json.JSONObject
  */
 object JSonUtils {
 
+    //fixme java实体类必须有setter()方法。
+    //fixme kotlin 属性，不能被internal
+
     //var clazz = 对象.javaClass
     //调用 getBean(jsonObject, clazz)!! 后面的感叹号是发生异常时会抛出异常。kotlin不强制捕捉异常。
     //parseObject(jsonObject, String.javaClass)
@@ -34,28 +37,28 @@ object JSonUtils {
                 }
                 if (value != null && !value.trim().equals("") && !value.trim().equals("null")) {
                     //if (!it.name.equals("serialVersionUID") && !it.name.equals("\$change")) {
-                    //Log.e("test", "属性:\t" + it.name + "\t类型:\t" + it.genericType.toString())
                     var type = it.genericType.toString().trim()//属性类型
                     var name = it.name.substring(0, 1).toUpperCase() + it.name.substring(1)//属性名称【首字目进行大写】。
                     val m = clazz.getMethod("set" + name, it.type)
-                    //以下兼容了八了基本类型和 Stirng及Any。几乎兼容所有类型。
+                    //Log.e("test", "属性:\t" + it.name + "\t类型:\t" + it.genericType.toString()+"\ttype:\t"+type+"\tm:\t"+m)
+                    //fixme 以下兼容了八了基本类型和 Stirng及Any。几乎兼容所有类型。兼容了java 和 kotlin
                     //kotlin基本类型虽然都对象，但是class文件都是基本类型。不是class类型哦。
                     // 即kotlin基本类型的字节码都是基本类型。
-                    if (type == "class java.lang.String" || type == "class java.lang.Object") {
+                    if (type == "class java.lang.String" || type == "class java.lang.Object") {//Object 就是Any,class类型是相同的。
                         m.invoke(t, value)//String类型 Object类型
-                    } else if (type == "int") {
+                    } else if (type == "int" || type.equals("class java.lang.Integer")) {
                         m.invoke(t, value.toInt())//Int类型
-                    } else if (type == "float") {
+                    } else if (type == "float" || type.equals("class java.lang.Float")) {
                         m.invoke(t, value.toFloat())//Float类型
-                    } else if (type == "double") {
+                    } else if (type == "double" || type.equals("class java.lang.Double")) {
                         m.invoke(t, value.toDouble())//Double类型
-                    } else if (type == "long") {
+                    } else if (type == "long" || type.equals("class java.lang.Long")) {
                         m.invoke(t, value.toLong())//Long类型
-                    } else if (type == "boolean") {
+                    } else if (type == "boolean" || type.equals("class java.lang.Boolean")) {
                         m.invoke(t, value.toBoolean())//布尔类型。 "true".toBoolean() 只有true能够转换为true，其他所有值都只能转换为false
-                    } else if (type == "short") {
+                    } else if (type == "short" || type.equals("class java.lang.Short")) {
                         m.invoke(t, value.toShort())//Short类型
-                    } else if (type == "byte") {
+                    } else if (type == "byte" || type.equals("class java.lang.Byte")) {
                         var byte = value.toInt()//不能有小数点，不然转换异常。小数点无法正常转换成Int类型。可以有负号。负数能够正常转换。
                         if (byte > 127) {
                             byte = 127
@@ -63,7 +66,7 @@ object JSonUtils {
                             byte = -128
                         }
                         m.invoke(t, byte.toByte())//Byte类型 ,范围是：-128~127
-                    } else if (type == "char") {
+                    } else if (type == "char" || type.equals("class java.lang.Character")) {
                         m.invoke(t, value.toCharArray()[0])//Char类型。字符只有一个字符。即单个字符。
                     }
                 }
@@ -85,6 +88,7 @@ object JSonUtils {
         } catch (e: Exception) {
             Log.e("test", "json解析异常:\t" + result)
         }
+//        return parseObject(jsonObjec, t::class.java)
         return parseObject(jsonObjec, t::class.java)
     }
 
