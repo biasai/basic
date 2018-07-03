@@ -109,16 +109,17 @@ object JSonUtils {
     }
 
     //JSonUtils.parseArray(response, ArrayList<String>())
-    inline fun <reified T : Any> parseArray(result: String?, list: ArrayList<T>): ArrayList<T>? {
+    //不知道是抽什么风，用T无法正常解析。只能用T2
+    inline fun <reified T2 : Any> parseArray(result: String?, list: ArrayList<T2>): ArrayList<T2>? {
         //Log.e("test", "执行了 ArrayList<T>")
         var jsonArray = JSONArray(result)
         var length = jsonArray.length()
         if (length > 0) {
             length -= 1
             for (i in 0..length) {
-                var t = parseObject(jsonArray.getJSONObject(i), T::class.java)
+                var t = parseObject(jsonArray.getJSONObject(i), T2::class.java)
                 t?.let {
-                    if (it is T) {
+                    if (it is T2) {
                         list.add(it)
                     }
                 }
