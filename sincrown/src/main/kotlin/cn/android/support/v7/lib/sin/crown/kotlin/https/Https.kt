@@ -7,7 +7,7 @@ import java.io.File
 
 open class Https(open var url: String?, open var activity: Activity? = null) {//fixme activity不为空时，回调到主线程
 
-    var timeOut = 3000;//超时链接时间，单位毫秒,一般500毫秒足已。亲测100%有效。极少数设备可能脑抽无效。不用管它。
+    var timeOut = 5000;//超时链接时间，单位毫秒,一般500毫秒足已。亲测100%有效。极少数设备可能脑抽无效。不用管它。
     fun timeOut(timeOut: Int = this.timeOut): Https {
         this.timeOut = timeOut
         return this
