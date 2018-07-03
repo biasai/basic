@@ -109,7 +109,7 @@ object JSonUtils {
     }
 
     //JSonUtils.parseArray(response, ArrayList<String>())
-    inline fun <reified T : Any> parseArray(result: String?, list: ArrayList<T?>): ArrayList<T?>? {
+    inline fun <reified T : Any> parseArray(result: String?, list: ArrayList<T>): ArrayList<T>? {
         //Log.e("test", "执行了 ArrayList<T>")
         var jsonArray = JSONArray(result)
         var length = jsonArray.length()
