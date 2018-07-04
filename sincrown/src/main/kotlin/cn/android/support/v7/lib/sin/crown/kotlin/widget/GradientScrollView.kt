@@ -60,11 +60,134 @@ class GradientScrollView : BounceScrollView {
 
     }
 
+    var top_color = Color.TRANSPARENT//fixme 上半部分颜色
+    fun top_color(top_color: Int) {
+        this.top_color = top_color
+    }
+
+    fun top_color(top_color: String) {
+        this.top_color = Color.parseColor(top_color)
+    }
+
+    var bottom_color = Color.TRANSPARENT//fixme 下半部分颜色
+    fun bottom_color(bottom_color: Int) {
+        this.bottom_color = bottom_color
+    }
+
+    fun bottom_color(bottom_color: String) {
+        this.bottom_color = Color.parseColor(bottom_color)
+    }
+
+    var left_color = Color.TRANSPARENT//fixme 左半部分颜色
+    fun left_color(left_color: Int) {
+        this.left_color = left_color
+    }
+
+    fun left_color(left_color: String) {
+        this.left_color = Color.parseColor(left_color)
+    }
+
+    var right_color = Color.TRANSPARENT//fixme 右半部分颜色
+    fun right_color(right_color: Int) {
+        this.right_color = right_color
+    }
+
+    fun right_color(right_color: String) {
+        this.right_color = Color.parseColor(right_color)
+    }
+
+    var left_top_color = Color.TRANSPARENT//fixme 左上角部分颜色
+    fun left_top_color(left_top_color: Int) {
+        this.left_top_color = left_top_color
+    }
+
+    fun left_top_color(left_top_color: String) {
+        this.left_top_color = Color.parseColor(left_top_color)
+    }
+
+    var right_top_color = Color.TRANSPARENT//fixme 右上角部分颜色
+    fun right_top_color(right_top_color: Int) {
+        this.right_top_color = right_top_color
+    }
+
+    fun right_top_color(right_top_color: String) {
+        this.right_top_color = Color.parseColor(right_top_color)
+    }
+
+    var left_bottom_color = Color.TRANSPARENT//fixme 左下角部分颜色
+    fun left_bottom_color(left_bottom_color: Int) {
+        this.left_bottom_color = left_bottom_color
+    }
+
+    fun left_bottom_color(left_bottom_color: String) {
+        this.left_bottom_color = Color.parseColor(left_bottom_color)
+    }
+
+    var right_bottom_color = Color.TRANSPARENT//fixme 右下角部分颜色
+    fun right_bottom_color(right_bottom_color: Int) {
+        this.right_bottom_color = right_bottom_color
+    }
+
+    fun right_bottom_color(right_bottom_color: String) {
+        this.right_bottom_color = Color.parseColor(right_bottom_color)
+    }
+
     override fun draw(canvas: Canvas?) {
         canvas?.apply {
             var paint = Paint()
             paint.isAntiAlias = true
             paint.isDither = true
+            paint.style = Paint.Style.FILL_AND_STROKE
+
+            //上半部分颜色
+            if (top_color != Color.TRANSPARENT) {
+                paint.color = top_color
+                drawRect(RectF(0f, 0f, width.toFloat(), height / 2f), paint)
+            }
+
+            //下半部分颜色
+            if (bottom_color != Color.TRANSPARENT) {
+                paint.color = bottom_color
+                drawRect(RectF(0f, height / 2f, width.toFloat(), height.toFloat()), paint)
+            }
+
+
+            //左半部分颜色
+            if (left_color != Color.TRANSPARENT) {
+                paint.color = left_color
+                drawRect(RectF(0f, 0f, width.toFloat() / 2, height.toFloat()), paint)
+            }
+
+            //右半部分颜色
+            if (right_color != Color.TRANSPARENT) {
+                paint.color = right_color
+                drawRect(RectF(width / 2f, 0f, width.toFloat(), height.toFloat()), paint)
+            }
+
+            //左上角部分颜色
+            if (left_top_color != Color.TRANSPARENT) {
+                paint.color = left_top_color
+                drawRect(RectF(0f, 0f, width.toFloat() / 2, height.toFloat() / 2), paint)
+            }
+
+            //右上角部分颜色
+            if (right_top_color != Color.TRANSPARENT) {
+                paint.color = right_top_color
+                drawRect(RectF(width / 2f, 0f, width.toFloat(), height.toFloat() / 2), paint)
+            }
+
+            //左下角部分颜色
+            if (left_bottom_color != Color.TRANSPARENT) {
+                paint.color = left_bottom_color
+                drawRect(RectF(0f, height / 2f, width.toFloat() / 2, height.toFloat()), paint)
+            }
+
+            //右下角部分颜色
+            if (right_bottom_color != Color.TRANSPARENT) {
+                paint.color = right_bottom_color
+                drawRect(RectF(width / 2f, height / 2f, width.toFloat(), height.toFloat()), paint)
+            }
+
             //水平渐变
             horizontalColors?.let {
                 var shader = LinearGradient(0f, 0f, width.toFloat(), 0f, it, null, Shader.TileMode.MIRROR)
@@ -80,7 +203,8 @@ class GradientScrollView : BounceScrollView {
                 paint.setShader(shader)
                 drawPaint(paint)
             }
+
         }
-        super.draw(canvas)
+        super.draw(canvas)//在下面。不然内容会被覆盖
     }
 }
