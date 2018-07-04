@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.widget.BounceScrollView
 
 /**
@@ -206,5 +207,26 @@ class GradientScrollView : BounceScrollView {
 
         }
         super.draw(canvas)//在下面。不然内容会被覆盖
+
+        canvas?.let {
+            draw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                it(canvas, paint)
+            }
+        }
+
     }
+
+    //自定义画布，根据需求。自主实现
+    var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+
+    //自定义，重新绘图
+    fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientScrollView {
+        this.draw = draw
+        postInvalidate()//刷新
+        return this
+    }
+
 }

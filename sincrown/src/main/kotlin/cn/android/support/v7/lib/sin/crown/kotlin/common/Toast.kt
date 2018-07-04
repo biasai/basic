@@ -61,6 +61,9 @@ object Toast {
     //显示文本
     fun show(text: String?, init: ((textView: RoundTextView) -> Unit)? = null) {
         text?.let {
+            if(it.trim().equals("")){
+                return
+            }
             default()
             if (toast == null) {
                 toast = Toast(BaseApplication.getInstance())

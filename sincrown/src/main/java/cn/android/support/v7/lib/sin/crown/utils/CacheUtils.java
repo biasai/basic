@@ -23,8 +23,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -331,8 +333,43 @@ public class CacheUtils {
     }
 
     // =======================================
-    // ============= 序列化 数据 读写 ===============
+    // =============fixme  序列化 数据 读写 ==============================================================
     // =======================================
+
+    /**
+     * fixme 保存list数组，注意list里面的实体类必须继承Serializable，
+     * fixme 无法保存实体类里面的Bitmap位图。要保存位图，请单独保存。如果实体里面有位图，位图清空即可。
+     * @param key
+     * @param list
+     * @param <T>
+     */
+    public <T> void put(String key, List<T> list) {
+        put(key, list, -1);
+    }
+
+    public <T> void put(String key, List<T> list, int saveTime) {
+        if (list.size() > 0) {
+            put(key + "size", list.size()+"");
+            for (int i = 0; i < list.size(); i++) {
+                T t = list.get(i);
+                put(key + "" + i, (Serializable) t, saveTime);
+            }
+        }
+    }
+
+    public <T> List<T> getAsList(String key) {
+        String size = getAsString(key + "size");
+        if (size != null) {
+            int last = Integer.valueOf(size);
+            List list = new ArrayList<T>();
+            for (int i = 0; i < last; i++) {
+                T t = (T) getAsObject(key + "" + i);
+                list.add(t);
+            }
+            return list;
+        }
+        return null;
+    }
 
     /**
      * 保存 Serializable数据 到 缓存中

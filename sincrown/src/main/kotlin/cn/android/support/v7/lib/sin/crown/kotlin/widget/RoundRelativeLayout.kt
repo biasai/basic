@@ -93,6 +93,24 @@ class RoundRelativeLayout : RelativeLayout {
             }
 
         }
+        canvas?.let {
+            draw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                it(canvas, paint)
+            }
+        }
+    }
+
+    //自定义画布，根据需求。自主实现
+    var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+
+    //自定义，重新绘图
+    fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
+        this.draw = draw
+        postInvalidate()//刷新
+        return this
     }
 
 }
