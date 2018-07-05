@@ -43,8 +43,21 @@ open class RoundRelativeLayout : RelativeLayout {
         setLayerType(View.LAYER_TYPE_HARDWARE, null)//开启硬件加速
     }
 
-    override fun draw(canvas: Canvas?) {
-        super.draw(canvas)
+    override fun dispatchDraw(canvas: Canvas?) {
+        //背景
+        canvas?.let {
+            onDraw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth = 0f
+                it(canvas, paint)
+            }
+        }
+
+        super.dispatchDraw(canvas)
+
         canvas?.let {
             if (left_top <= 0) {
                 left_top = all_radius
@@ -94,6 +107,7 @@ open class RoundRelativeLayout : RelativeLayout {
             }
 
         }
+        //前景
         canvas?.let {
             draw?.let {
                 var paint = Paint()
@@ -124,20 +138,6 @@ open class RoundRelativeLayout : RelativeLayout {
         this.onDraw = onDraw
         postInvalidate()//刷新
         return this
-    }
-
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        canvas?.let {
-            onDraw?.let {
-                var paint = Paint()
-                paint.isAntiAlias = true
-                paint.isDither = true
-                paint.style = Paint.Style.FILL_AND_STROKE
-                paint.strokeWidth = 0f
-                it(canvas, paint)
-            }
-        }
     }
 
 }
