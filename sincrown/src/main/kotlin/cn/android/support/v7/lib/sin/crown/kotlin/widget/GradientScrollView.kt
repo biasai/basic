@@ -10,7 +10,7 @@ import cn.android.support.v7.lib.sin.crown.widget.BounceScrollView
 /**
  * 背景颜色渐变的弹性ScrollView
  */
-class GradientScrollView : BounceScrollView {
+open class GradientScrollView : BounceScrollView {
     constructor(context: Context) : super(context) {}
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
@@ -213,6 +213,8 @@ class GradientScrollView : BounceScrollView {
                 var paint = Paint()
                 paint.isAntiAlias = true
                 paint.isDither = true
+                paint.style=Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth=0f
                 it(canvas, paint)
             }
         }
@@ -220,13 +222,37 @@ class GradientScrollView : BounceScrollView {
     }
 
     //自定义画布，根据需求。自主实现
-    var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+    open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //自定义，重新绘图
-    fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientScrollView {
+    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientScrollView {
         this.draw = draw
         postInvalidate()//刷新
         return this
+    }
+
+    //画自己【onDraw在draw()的流程里面，即在它的前面执行】
+    var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+
+    //画自己
+    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientScrollView {
+        this.onDraw = onDraw
+        postInvalidate()//刷新
+        return this
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.let {
+            onDraw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                paint.style=Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth=0f
+                it(canvas, paint)
+            }
+        }
     }
 
 }

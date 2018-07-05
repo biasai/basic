@@ -8,13 +8,14 @@ import android.util.Log
 import android.view.View
 import android.widget.RelativeLayout
 import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 
 
 /**
  * 自定义圆角相对布局
  * Created by 彭治铭 on 2018/5/20.
  */
-class RoundRelativeLayout : RelativeLayout {
+open class RoundRelativeLayout : RelativeLayout {
 
     constructor(context: Context) : super(context) {}
 
@@ -98,19 +99,45 @@ class RoundRelativeLayout : RelativeLayout {
                 var paint = Paint()
                 paint.isAntiAlias = true
                 paint.isDither = true
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth = 0f
                 it(canvas, paint)
             }
         }
     }
 
     //自定义画布，根据需求。自主实现
-    var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+    open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //自定义，重新绘图
-    fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
+    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
         this.draw = draw
         postInvalidate()//刷新
         return this
+    }
+
+    //画自己【onDraw在draw()的流程里面，即在它的前面执行】
+    var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+
+    //画自己[onDraw与系统名冲突，所以加一个横线]
+    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
+        this.onDraw = onDraw
+        postInvalidate()//刷新
+        return this
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.let {
+            onDraw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth = 0f
+                it(canvas, paint)
+            }
+        }
     }
 
 }

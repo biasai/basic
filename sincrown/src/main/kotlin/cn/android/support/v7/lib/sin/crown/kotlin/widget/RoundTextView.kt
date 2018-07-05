@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.util.Log
 import android.view.View
 import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 
 
@@ -97,18 +98,45 @@ class RoundTextView : TextView {
                 var paint = Paint()
                 paint.isAntiAlias = true
                 paint.isDither = true
+                paint.style=Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth=0f
                 it(canvas, paint)
             }
         }
     }
 
     //自定义画布，根据需求。自主实现
-    var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+    open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //自定义，重新绘图
-    fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundTextView {
+    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundTextView {
         this.draw = draw
         postInvalidate()//刷新
         return this
     }
+
+    //画自己【onDraw在draw()的流程里面，即在它的前面执行】
+    var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+
+    //画自己
+    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundTextView {
+        this.onDraw = onDraw
+        postInvalidate()//刷新
+        return this
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.let {
+            onDraw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                paint.style=Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth=0f
+                it(canvas, paint)
+            }
+        }
+    }
+
 }

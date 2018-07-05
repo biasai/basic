@@ -4,11 +4,12 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 
 /**
  * 颜色渐变视图
  */
-class GradientView : View {
+open class GradientView : View {
     constructor(context: Context) : super(context) {}
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
@@ -208,18 +209,45 @@ class GradientView : View {
                     var paint = Paint()
                     paint.isAntiAlias = true
                     paint.isDither = true
+                    paint.style=Paint.Style.FILL_AND_STROKE
+                    paint.strokeWidth=0f
                     it(canvas, paint)
                 }
             }
         }
     }
     //自定义画布，根据需求。自主实现
-    var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+    open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //自定义，重新绘图
-    fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientView {
+    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientView {
         this.draw = draw
         postInvalidate()//刷新
         return this
     }
+
+    //画自己【onDraw在draw()的流程里面，即在它的前面执行】
+    var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+
+    //画自己
+    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientView {
+        this.onDraw = onDraw
+        postInvalidate()//刷新
+        return this
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.let {
+            onDraw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                paint.style=Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth=0f
+                it(canvas, paint)
+            }
+        }
+    }
+
 }
