@@ -206,20 +206,93 @@ open class GradientScrollView : BounceScrollView {
             }
 
         }
-        super.draw(canvas)//在下面。不然内容会被覆盖
+        super.draw(canvas)//在下面。不然内容会被覆盖【这里是ScrollView内部的子控件】
+
+        canvas?.apply {
+            //顶部渐变
+            top_gradient_color?.let {
+                if (top_gradient_height > 0) {
+                    var paint = Paint()
+                    paint.isAntiAlias = true
+                    paint.isDither = true
+                    paint.style = Paint.Style.FILL_AND_STROKE
+                    var shader = LinearGradient(0f, 0f, 0f, top_gradient_height, it, null, Shader.TileMode.CLAMP)
+                    paint.setShader(shader)
+                    drawRect(RectF(0f, 0f, width.toFloat(), top_gradient_height), paint)
+                }
+            }
+
+            //底部渐变
+            bottom_gradient_color?.let {
+                if (bottom_gradient_height > 0) {
+                    var paint = Paint()
+                    paint.isAntiAlias = true
+                    paint.isDither = true
+                    paint.style = Paint.Style.FILL_AND_STROKE
+                    var shader = LinearGradient(0f, height.toFloat() - bottom_gradient_height, 0f, height.toFloat(), it, null, Shader.TileMode.CLAMP)
+                    paint.setShader(shader)
+                    drawRect(RectF(0f, height.toFloat() - bottom_gradient_height, width.toFloat(), height.toFloat()), paint)
+                }
+            }
+        }
 
         canvas?.let {
             draw?.let {
                 var paint = Paint()
                 paint.isAntiAlias = true
                 paint.isDither = true
-                paint.style=Paint.Style.FILL_AND_STROKE
-                paint.strokeWidth=0f
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth = 0f
                 it(canvas, paint)
             }
         }
 
     }
+
+    //fixme 顶部渐变颜色,如：top_gradient_color("#ffffff","#00ffffff") 白色渐变,颜色是均匀变化的
+    var top_gradient_color: IntArray? = null
+    //fixme 顶部渐变高度
+    var top_gradient_height: Float = 0f
+
+    fun top_gradient_color(vararg color: Int) {
+        top_gradient_color = color
+    }
+
+    fun top_gradient_color(vararg color: String) {
+        top_gradient_color = IntArray(color.size)
+        top_gradient_color?.apply {
+            if (color.size > 1) {
+                for (i in 0..color.size - 1) {
+                    this[i] = Color.parseColor(color[i])
+                }
+            } else {
+                this[0] = Color.parseColor(color[0])
+            }
+        }
+    }
+
+    //fixme 底部渐变颜色，如：bottom_gradient_color("#00ffffff","#ffffff") 白色渐变,颜色是均匀变化的
+    var bottom_gradient_color: IntArray? = null
+    //fixme 底部渐变高度
+    var bottom_gradient_height: Float = 0f
+
+    fun bottom_gradient_color(vararg color: Int) {
+        bottom_gradient_color = color
+    }
+
+    fun bottom_gradient_color(vararg color: String) {
+        bottom_gradient_color = IntArray(color.size)
+        bottom_gradient_color?.apply {
+            if (color.size > 1) {
+                for (i in 0..color.size - 1) {
+                    this[i] = Color.parseColor(color[i])
+                }
+            } else {
+                this[0] = Color.parseColor(color[0])
+            }
+        }
+    }
+
 
     //自定义画布，根据需求。自主实现
     open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
@@ -248,8 +321,8 @@ open class GradientScrollView : BounceScrollView {
                 var paint = Paint()
                 paint.isAntiAlias = true
                 paint.isDither = true
-                paint.style=Paint.Style.FILL_AND_STROKE
-                paint.strokeWidth=0f
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth = 0f
                 it(canvas, paint)
             }
         }
