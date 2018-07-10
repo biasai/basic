@@ -3,11 +3,12 @@ package cn.android.support.v7.lib.sin.crown.kotlin.https
 import android.app.Activity
 import android.util.Log
 import cn.android.support.v7.lib.sin.crown.kotlin.common.Progressbar
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.JSonUtils
 import java.io.File
 
 open class Https(open var url: String?, open var activity: Activity? = null) {//fixme activity不为空时，回调到主线程
 
-    var timeOut = 5000;//超时链接时间，单位毫秒,一般500毫秒足已。亲测100%有效。极少数设备可能脑抽无效。不用管它。
+    var timeOut = 5000//超时链接时间，单位毫秒,一般500毫秒足已。亲测100%有效。极少数设备可能脑抽无效。不用管它。
     fun timeOut(timeOut: Int = this.timeOut): Https {
         this.timeOut = timeOut
         return this
@@ -316,6 +317,29 @@ open class Https(open var url: String?, open var activity: Activity? = null) {//
                 return super.onResponseList(t)
             }
         }.isResponse(true).isList(true), timeOut = timeOut)
+    }
+
+    //fixme 必须使用内联函数，不然TypeReference无法解析泛型。
+    inline fun <reified T> GetT(vararg field: String, noinline callback: (t: T) -> Unit) {
+        Get() {
+            var t = JSonUtils.parseAny<T>(it, *field)
+            callback?.let {
+                it(t as T)
+            }
+        }
+    }
+
+    //fixme TypeReference 泛型再传泛型，泛型必须是具体类型。
+    //fixme 根据字段解析数据(如果该字段不存在，就解析原有数据)
+    //fixme 使用post或Post会冲突报错，所以，使用方法名 PostT
+    inline fun <reified T> PostT(vararg field: String, noinline callback: (t: T) -> Unit) {
+        Post() {
+            //Log.e("test","数据:\t"+it)
+            var t = JSonUtils.parseAny<T>(it, *field)
+            callback?.let {
+                it(t as T)
+            }
+        }
     }
 
 }

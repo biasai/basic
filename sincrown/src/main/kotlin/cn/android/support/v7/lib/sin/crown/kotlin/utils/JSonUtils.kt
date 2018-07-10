@@ -18,12 +18,20 @@ object JSonUtils {
 
     //fixme 内联函数不能再调用内联函数，即内联函数不能闭合[即不能自己调用自己]
 
+    //fixme 直接传入泛型即可。基本支持所有类型。随便传。只要json数据格式正确，以及字段对应上即可。如果转换失败，一般都是json格式的问题。
+    //fixme 支持：Mode1；Model<Mode2>；Model<Model<Mode2>>；Model<ArrayList<Mode2>>；ArrayList<Mode2>；ArrayList<Model<Mode2>>
+    //fixme 解析数据大约28毫秒。
+    inline fun <reified T> parseAny(json: String?, vararg field: String): T {
+        var typeReference = object : TypeReference<T>() {}
+        return parseObject(parseJson(json, *field), typeReference.GenericClass, typeReference.GenericClass2, typeReference.GenericClass3) as T
+    }
+
     //根据传入类型，自动分辨json和json数组。
-    inline fun <reified T, reified T2> parseObject(json: String?, clazz: Class<T>, clazzT: Class<T2>? = null): Any? {
+    inline fun <reified T, reified T2, reified T3> parseObject(json: String?, clazz: Class<T>, clazzT2: Class<T2>? = null, clazzT3: Class<T3>? = null): Any? {
         if (clazz.name.trim().equals("java.util.ArrayList")) {
             //JSON数组
             try {
-                clazzT?.let {
+                clazzT2?.let {
                     var jsonArray = JSONArray(json.toString())
                     var last = jsonArray.length()
                     last -= 1//最后一个下标
@@ -32,7 +40,7 @@ object JSonUtils {
                     }
                     var list = ArrayList<Any>()
                     for (i in 0..last) {
-                        var m = parseObject(jsonArray.getJSONObject(i), clazzT, null)
+                        var m = parseObject(jsonArray.getJSONObject(i), clazzT2, clazzT3)
                         m?.let {
                             list.add(it as Any)
                         }
@@ -47,7 +55,7 @@ object JSonUtils {
             //JSON
             try {
                 var jsonObject = JSONObject(json.toString())
-                return parseObject(jsonObject, clazz, clazzT)
+                return parseObject(jsonObject, clazz, clazzT2, clazzT3)
             } catch (e: Exception) {
                 Log.e("test", "json异常:\t" + e.message)
             }
@@ -61,7 +69,7 @@ object JSonUtils {
     //JSonUtils.parseObject(json,BaseBean::class.java)
     //JSonUtils.parseObject(json,any.javaClass)
     //fixme clazzT泛型的class类型，可以为空
-    fun <T> parseObject(jsonObject: JSONObject?, clazz: Class<T>, clazzT: Class<*>? = null): T? {
+    fun <T> parseObject(jsonObject: JSONObject?, clazz: Class<T>, clazzT2: Class<*>? = null, clazzT3: Class<*>? = null, index: Int = 1): T? {
         try {
             //泛型实例化,注意啦，这一步，必须具备空构造函数，不然无法实例化。或者有默认参数也行
             //必须有空构造函数，或者所有参数都有默认参数。说的是所有参数。不然无法实例化。
@@ -71,18 +79,21 @@ object JSonUtils {
             if (jsonObject == null || jsonObject.toString().trim().equals("") || jsonObject.toString().trim().equals("{}") || jsonObject.toString().trim().equals("[]")) {
                 return t
             }
-
+            //Log.e("test","json数据：\t"+jsonObject.toString())
+            //Log.e("test","执行中。。。")
             clazz?.declaredFields?.forEach {
+                //Log.e("test","执行循环中。。。")
                 var value: String? = null
                 if (jsonObject.has(it.name)) {//判斷json數據是否存在該字段
                     value = jsonObject.getString(it.name)//获取json数据
                 }
+                //Log.e("test","属性：\t"+it.name+"\t数据:\t"+value)
                 if (value != null && !value.trim().equals("") && !value.trim().equals("null")) {
                     //if (!it.name.equals("serialVersionUID") && !it.name.equals("\$change")) {
                     var type = it.genericType.toString().trim()//属性类型
                     var name = it.name.substring(0, 1).toUpperCase() + it.name.substring(1)//属性名称【首字目进行大写】。
                     val m = clazz.getMethod("set" + name, it.type)
-                    //Log.e("test", "属性:\t" + it.name + "\t类型:\t" + it.genericType.toString() + "\ttype:\t" + type)
+                    //Log.e("test", "属性:\t" + it.name + "\t类型:\t" + it.genericType.toString() + "\ttype:\t" + type+"\t数据：\t"+value)
                     //fixme 以下兼容了八了基本类型和 Stirng及Any。几乎兼容所有类型。兼容了java 和 kotlin
                     //kotlin基本类型虽然都对象，但是class文件都是基本类型。不是class类型哦。
                     // 即kotlin基本类型的字节码都是基本类型。
@@ -110,17 +121,47 @@ object JSonUtils {
                         m.invoke(t, byte.toByte())//Byte类型 ,范围是：-128~127
                     } else if (type == "char" || type.equals("class java.lang.Character")) {
                         m.invoke(t, value.toCharArray()[0])//Char类型。字符只有一个字符。即单个字符。
-                    } else if (type != "class java.util.ArrayList" && !type.equals("class java.util.LinkedHashMap") && !type.equals("class java.util.HashMap")) {
+                    } else if (!type.equals("class java.util.HashMap")) {
                         try {
-                            if ((type.toString().trim().equals("T") || type.toString().trim().equals("T2")) && clazzT != null) {
-                                //fixme 泛型。只支持一级嵌套泛型。不支持多层。泛型标志固定一下。就用T获取T2。不要用其他其他的。
-                                m.invoke(t, parseObject(JSONObject(value), clazzT, null))
+                            if ((type.toString().trim().equals("T") || type.toString().trim().equals("T2")) && clazzT2 != null) {
+                                //Log.e("test", "嵌套泛型：\t" + clazzT2.name + "\t" + clazzT2)
+                                //fixme 嵌套泛型。只支持一级嵌套泛型。不支持多层。泛型标志固定一下。就用T或者T2。不要用其他的。
+                                if (clazzT2.name.equals("java.util.ArrayList") || clazzT2.name.equals("class java.util.ArrayList") || clazzT2.equals("class java.util.LinkedHashMap")) {
+                                    //嵌套泛型数组,格式：Model<ArrayList<Mode2>>
+                                    var jsonArray = JSONArray(value)
+                                    var last = jsonArray.length()
+                                    last -= 1//最后一个下标
+                                    if (last < 0) {
+                                        last = 0
+                                    }
+                                    var list = ArrayList<Any>()
+                                    clazzT3?.let {
+                                        for (i in 0..last) {
+                                            var m = parseObject(jsonArray.getJSONObject(i), clazzT3)
+                                            m?.let {
+                                                list.add(it as Any)
+                                            }
+                                        }
+                                    }
+                                    m.invoke(t, list)
+                                } else {
+                                    //嵌套泛型实体类
+                                    if (index == 1) {
+                                        clazzT2?.let {
+                                            m.invoke(t, parseObject(JSONObject(value), clazzT2, clazzT3, null, 2))
+                                        }
+                                    } else if (index >= 2) {
+                                        clazzT2?.let {
+                                            m.invoke(t, parseObject(JSONObject(value), clazzT2, null, null, 3))
+                                        }
+                                    }
+                                }
                             } else {
-                                var clazz = Class.forName(type.substring(5).trim())//具体类名，去除class前缀
-                                //Log.e("test", "type" + type + "\tclass:\t" + it.genericType + "\t" + it.genericType.javaClass+"\t"+type.substring(5))
-                                //Log.e("test","value:\t"+value+"\tclazz:\t"+clazz)
-                                //fixme 实体类里面嵌套实体类[必须是具体的实体类型，不支持泛型]
-                                m.invoke(t, parseObject(JSONObject(value), clazz, null))
+                                //fixme 实体类里面嵌套普通具体的实体类[必须是具体的实体类型,可以无限循环下去，但是不能是ArrayList数组，因为无法获取数组内部的具体类型。]
+                                if (!type.equals("class java.util.ArrayList") && !type.equals("class java.util.LinkedHashMap")) {
+                                    var clazz = Class.forName(type.substring(5).trim())//具体类名，去除class前缀
+                                    m.invoke(t, parseObject(JSONObject(value), clazz, null))
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e("test", "嵌套json解析异常:\t" + e.message)
@@ -149,7 +190,7 @@ object JSonUtils {
         var typeReference = object : TypeReference<T>() {}
         //return parseObject(jsonObjec, t::class.java)
         //Log.e("test","类型:\t"+t::class.java+"\t"+typeReference.genericTClass)
-        return parseObject(jsonObjec, t::class.java, typeReference.genericTClass)//支持一级嵌套泛型。
+        return parseObject(jsonObjec, t::class.java, typeReference.GenericClass2)//支持一级嵌套泛型。
     }
 
     inline fun <T : Any> parseObject(result: String?, t: T, typeReference: TypeReference<T>): T? {
@@ -162,7 +203,7 @@ object JSonUtils {
         }
         //return parseObject(jsonObjec, t::class.java)
         //Log.e("test","类型:\t"+t::class.java+"\t"+typeReference.genericTClass)
-        return parseObject(jsonObjec, t::class.java, typeReference.genericTClass)//支持一级嵌套泛型。
+        return parseObject(jsonObjec, t::class.java, typeReference.GenericClass2)//支持一级嵌套泛型。
     }
 
     //JSonUtils.parseArray(response, ArrayList<String>())
@@ -178,7 +219,7 @@ object JSonUtils {
             }
             var typeReference = object : TypeReference<T2>() {}
             for (i in 0..length) {
-                var t = parseObject(jsonArray.getJSONObject(i), T2::class.java, typeReference.genericTClass)//支持一级嵌套泛型。
+                var t = parseObject(jsonArray.getJSONObject(i), T2::class.java, typeReference.GenericClass2)//支持一级嵌套泛型。
                 t?.let {
                     if (it is T2) {
                         list.add(it)
