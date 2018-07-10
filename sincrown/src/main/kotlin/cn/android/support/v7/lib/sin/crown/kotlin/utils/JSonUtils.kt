@@ -18,8 +18,8 @@ object JSonUtils {
 
     //fixme 内联函数不能再调用内联函数，即内联函数不能闭合[即不能自己调用自己]
 
-    //fixme 直接传入泛型即可。基本支持所有类型。随便传。只要json数据格式正确，以及字段对应上即可。如果转换失败，一般都是json格式的问题。
-    //fixme 支持：Mode1；Model<Mode2>；Model<Model<Mode2>>；Model<ArrayList<Mode2>>；ArrayList<Mode2>；ArrayList<Model<Mode2>>
+    //fixme 直接传入泛型即可。基本支持所有类型。随便传。只要json数据格式正确，以及字段对应上即可。如果转换失败，一般都是json格式的问题。测试没问题，能够正确解析。
+    //fixme 支持：Mode1；Model<Mode2>；Model<Model<Mode2>>；Model<ArrayList<Mode2>>；ArrayList<Mode2>；ArrayList<Model<Mode2>>,目前只支持三层。多了解析不出来
     //fixme 解析数据大约28毫秒。
     inline fun <reified T> parseAny(json: String?, vararg field: String): T {
         var typeReference = object : TypeReference<T>() {}

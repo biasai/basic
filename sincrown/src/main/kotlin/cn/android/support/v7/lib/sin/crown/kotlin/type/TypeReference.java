@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 //泛型传入格式：Model<Mode2>
-//传入的必须是具体的类型，如果是泛型，也必须是reified 具体的泛型。
+//fixme 传入的必须是具体的类型，如果是泛型，也必须是reified 具体的泛型。[目前只支持三层，太多了，逻辑太复杂了，不好处理。]
 public class TypeReference<T> {
 
     private final Type type;
