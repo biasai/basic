@@ -3,7 +3,7 @@ package cn.android.support.v7.lib.sin.crown.kotlin.dialog
 import android.app.Activity
 import android.view.View
 import android.widget.TextView
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseApplication
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.NumberProgressBar

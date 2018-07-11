@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="cn.android.support.v7.lib.sin.crown" xmlns:tools="http://schemas.android.com/tools">
+    package="cn.android.support.v7.lib.sin.crown.kotlin" xmlns:tools="http://schemas.android.com/tools">
 
     <!--清单融合，写在application标签里面-->
     <!--xmlns:tools="http://schemas.android.com/tools"-->
@@ -25,7 +25,7 @@
 
         <!--android:name="android.support.v4.content.FileProvider"-->
         <provider
-            android:name=".kotlin.provider.MyFileProvider"
+            android:name=".provider.MyFileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">

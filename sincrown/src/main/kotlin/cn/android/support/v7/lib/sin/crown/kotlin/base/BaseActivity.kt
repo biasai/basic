@@ -3,7 +3,7 @@ package cn.android.support.v7.lib.sin.crown.kotlin.base
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Window
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.common.Toast
 
 /**

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cn.android.support.v7.lib.sin.crown.R;
+import cn.android.support.v7.lib.sin.crown.kotlin.R;
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px;
 import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils;
 import cn.android.support.v7.lib.sin.crown.view.datepicker.WheelPicker;

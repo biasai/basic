@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 

@@ -7,7 +7,7 @@ import android.widget.TextView
 import android.graphics.RectF
 import android.util.Log
 import android.view.View
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 

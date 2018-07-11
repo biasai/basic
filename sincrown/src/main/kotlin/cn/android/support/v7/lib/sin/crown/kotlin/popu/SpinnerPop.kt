@@ -9,7 +9,7 @@ import android.view.View.OVER_SCROLL_NEVER
 import android.view.ViewGroup
 import android.widget.PopupWindow
 import android.widget.RelativeLayout
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundRelativeLayout
 import cn.android.support.v7.lib.sin.crown.utils.PopuWindowUtils

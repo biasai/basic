@@ -6,7 +6,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 
 //BaseAlertDialog(this).setContentView(UI {  verticalLayout {
 //    gravity= Gravity.CENTER

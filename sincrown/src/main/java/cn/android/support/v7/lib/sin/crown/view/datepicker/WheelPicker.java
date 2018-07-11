@@ -23,7 +23,7 @@ import android.widget.Scroller;
 import java.util.Arrays;
 import java.util.List;
 
-import cn.android.support.v7.lib.sin.crown.R;
+import cn.android.support.v7.lib.sin.crown.kotlin.R;
 
 /**
  * 滚轮选择器（fixme 原始控件。滑动没有问题，非常完美，建议使用）

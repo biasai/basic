@@ -8,7 +8,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.support.v4.view.ViewPager
 import android.view.*
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 
 //    子类初始化参考
 //    init {

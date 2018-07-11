@@ -6,7 +6,7 @@ import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
-import cn.android.support.v7.lib.sin.crown.R
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import org.jetbrains.anko.*
