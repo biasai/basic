@@ -4,9 +4,21 @@ import android.app.Activity
 import android.util.Log
 import cn.android.support.v7.lib.sin.crown.kotlin.common.Progressbar
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.JSonUtils
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.KGsonUtils
 import java.io.File
 
-open class Https(open var url: String?, open var activity: Activity? = null) {//fixme activity不为空时，回调到主线程
+open class Https(open var url: String? = null, open var activity: Activity? = null) {
+
+    fun url(url: String): Https {
+        this.url = url
+        return this
+    }
+
+    //fixme activity不为空时，回调到主线程。且进度条也是在Activity不为空时才有效。
+    fun activity(activity: Activity): Https {
+        this.activity = activity
+        return this
+    }
 
     var timeOut = 5000//超时链接时间，单位毫秒,一般500毫秒足已。亲测100%有效。极少数设备可能脑抽无效。不用管它。
     fun timeOut(timeOut: Int = this.timeOut): Https {
@@ -14,7 +26,7 @@ open class Https(open var url: String?, open var activity: Activity? = null) {//
         return this
     }
 
-    var load: Boolean = false//是否显示进度条，默认不显示，fixme (Activity不能为空，Dialog需要Activity的支持)
+    var load: Boolean = false//fixme 是否显示进度条，默认不显示， (Activity不能为空，Dialog需要Activity的支持)
     fun showLoad(isLoad: Boolean = true): Https {
         this.load = isLoad
         return this
@@ -320,9 +332,9 @@ open class Https(open var url: String?, open var activity: Activity? = null) {//
     }
 
     //fixme 必须使用内联函数，不然TypeReference无法解析泛型。
-    inline fun <reified T> GetT(vararg field: String, noinline callback: (t: T) -> Unit) {
+    inline fun <reified T> Gets(vararg field: String, noinline callback: (t: T) -> Unit) {
         Get() {
-            var t = JSonUtils.parseAny<T>(it, *field)
+            var t = KGsonUtils.parseAny<T>(it, *field)
             callback?.let {
                 it(t as T)
             }
@@ -331,11 +343,11 @@ open class Https(open var url: String?, open var activity: Activity? = null) {//
 
     //fixme TypeReference 泛型再传泛型，泛型必须是具体类型。
     //fixme 根据字段解析数据(如果该字段不存在，就解析原有数据)
-    //fixme 使用post或Post会冲突报错，所以，使用方法名 PostT
-    inline fun <reified T> PostT(vararg field: String, noinline callback: (t: T) -> Unit) {
+    //fixme 使用post或Post会冲突报错，所以，使用方法名 Posts,不纠结了。Https就配Posts都有s吗。
+    inline fun <reified T> Posts(vararg field: String, noinline callback: (t: T) -> Unit) {
         Post() {
             //Log.e("test","数据:\t"+it)
-            var t = JSonUtils.parseAny<T>(it, *field)
+            var t = KGsonUtils.parseAny<T>(it, *field)
             callback?.let {
                 it(t as T)
             }
