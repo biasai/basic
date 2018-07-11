@@ -18,13 +18,13 @@ import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils;
  * Created by 彭治铭 on 2017/9/24.
  */
 
-public class ProgressView extends View {
-    public ProgressView(Context context) {
+public class ProgressCircleView extends View {
+    public ProgressCircleView(Context context) {
         super(context);
         init();
     }
 
-    public ProgressView(Context context, @Nullable AttributeSet attrs) {
+    public ProgressCircleView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }

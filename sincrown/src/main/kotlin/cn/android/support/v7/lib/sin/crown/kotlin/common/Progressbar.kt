@@ -5,7 +5,7 @@ import android.content.Context
 import android.view.Gravity
 import android.view.View
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
-import cn.android.support.v7.lib.sin.crown.view.ProgressView
+import cn.android.support.v7.lib.sin.crown.view.ProgressCircleView
 import org.jetbrains.anko.UI
 import org.jetbrains.anko.verticalLayout
 
@@ -19,7 +19,7 @@ class Progressbar(activity: Activity, isStatus: Boolean = true, isTransparent: B
         return context.UI {
             verticalLayout {
                 gravity = Gravity.CENTER
-                var progressView = ProgressView(this.context)
+                var progressView = ProgressCircleView(this.context)
                 addView(progressView)
             }
         }.view
