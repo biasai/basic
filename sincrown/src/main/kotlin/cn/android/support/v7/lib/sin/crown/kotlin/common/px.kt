@@ -3,6 +3,8 @@ package cn.android.support.v7.lib.sin.crown.kotlin.common
 import android.app.Activity
 import android.app.Application
 import android.content.pm.ActivityInfo
+import android.graphics.Bitmap
+import android.graphics.Paint
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
@@ -176,6 +178,41 @@ object px {
         val location = IntArray(2)
         view.getLocationOnScreen(location)
         return (realHeight - location[1] - view.height).toInt()
+    }
+
+    //测量两个View之间的X坐标间距
+    fun distanceX(view1: View, view2: View): Float {
+        return view2.x - view1.x
+    }
+
+    //测量两个View之间的Y坐标间距
+    fun distanceY(view1: View, view2: View): Float {
+        return view2.y - view1.y
+    }
+
+    //获取文本居中Y坐标,height：以这个高度进行对其。即对其高度
+    fun centerTextY(paint: Paint, height: Float): Float {
+        var baseline = (height - (paint.descent() - paint.ascent())) / 2 - paint.ascent()
+        return baseline
+    }
+
+    //获取文本居中X坐标，以文本居左为计算标准，即：paint.textAlign=Paint.Align.LEFT
+    fun centerTextX(text: String, paint: Paint, width: Float): Float {
+        val w = paint.measureText(text, 0, text.length)//测量文本的宽度
+        var x = (width - w) / 2
+        return x
+    }
+
+    //获取位图居中Y坐标
+    fun centerBitmapY(bitmap: Bitmap, height: Float): Float {
+        var y = (height - bitmap.height) / 2
+        return y
+    }
+
+    //获取位图居中X坐标，width对其的宽度
+    fun centerBitmapX(bitmap: Bitmap, width: Float): Float {
+        var x = (width - bitmap.width) / 2
+        return x
     }
 
     //Dp转像素
