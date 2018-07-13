@@ -8,7 +8,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 弹性ScrollView【滑动原理，对scrollview里面的第一个View进行位置上下偏移滑动。】
@@ -100,6 +104,15 @@ public class BounceScrollView extends NestedScrollView {
 
     int inerTop = 0;//记录原始的顶部高度。
 
+    Map map = new HashMap<Integer, MPoint>();
+
+    class MPoint {
+        public float y;// 点击时y坐标
+        public float preY = y;// 按下时的y坐标
+        public float nowY = y;// 时时y坐标
+        public int deltaY = 0;
+    }
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         // TODO Auto-generated method stub
@@ -112,23 +125,30 @@ public class BounceScrollView extends NestedScrollView {
         }
         currentX = ev.getX();
         currentY = ev.getY();
-        switch (ev.getAction()) {
+        switch (ev.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
-                //Log.e("test", "頂部Y2:\t" + inner.getTop());
+                map.put(ev.getPointerId(ev.getActionIndex()), new MPoint());
+//                Log.e("test", "按下:\t" + ev.getPointerCount());
                 inerTop = inner.getTop();//原始顶部，不一定都是0，所以要记录一下。
                 isfirst = true;
                 isfirstDirection = 0;
                 break;
+            case MotionEvent.ACTION_POINTER_DOWN://第二个手指按下
+                map.put(ev.getPointerId(ev.getActionIndex()), new MPoint());
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                map.remove(ev.getPointerId(ev.getActionIndex()));
+                break;
             case MotionEvent.ACTION_MOVE:
                 distanceX = currentX - lastX;
                 distanceY = currentY - lastY;
-                //Log.e("test", "x滑动:\t" + distanceX + "\ty滑动:\t" + distanceY);
+//                Log.e("test", "x滑动:\t" + distanceX + "\ty滑动:\t" + distanceY);
+//                Log.e("test", "currentX:\t" + currentX + "\tcurrentY:\t" + currentY);
                 if (distanceY > 0) {
                     isSlidingDown = true;//下滑大于0
                 } else {
                     isSlidingDown = false;//上滑小于0
                 }
-
                 if ((Math.abs(distanceX) < Math.abs(distanceY)) && Math.abs(distanceY) > 12) {
                     if (isfirstDirection == 0) {
                         isfirstDirection = 2;//上下方向
@@ -162,19 +182,21 @@ public class BounceScrollView extends NestedScrollView {
 
                 break;
             case MotionEvent.ACTION_UP:
+//                Log.e("test", "离开");
                 //以防万一，恢复原始状态
                 isDownAnime = true;
                 isUpAnime = true;
                 if (upDownSlide && inner != null) {
                     commOnTouchEvent(ev);
                 }
+                map.remove(ev.getPointerId(ev.getActionIndex()));
+                map.clear();
                 break;
             default:
                 break;
         }
         lastX = currentX;
         lastY = currentY;
-
         return super.dispatchTouchEvent(ev);
     }
 
@@ -195,6 +217,8 @@ public class BounceScrollView extends NestedScrollView {
         return super.onTouchEvent(ev);
     }
 
+
+    boolean bAnime = false;//是否开始动画
 
     /***
      * 触摸事件
@@ -218,13 +242,34 @@ public class BounceScrollView extends NestedScrollView {
                 final float preY = y;// 按下时的y坐标
                 float nowY = ev.getY();// 时时y坐标
                 int deltaY = (int) (preY - nowY);// 滑动距离
+
+                if (ev.getPointerCount() > 1) {
+                    //多指滑动
+                    for (int i = 0; i < ev.getPointerCount(); i++) {
+                        MPoint m = (MPoint) map.get(ev.getPointerId(i));
+                        m.preY = m.y;
+                        m.nowY = ev.getY(i);
+                        m.deltaY = (int) (m.preY - m.nowY);
+                        if (i == 0) {
+                            deltaY = (int) m.deltaY;
+                        } else {
+                            //移动距离取最大的
+                            if (Math.abs(deltaY) < Math.abs(m.deltaY)) {
+                                deltaY = (int) m.deltaY;
+                            }
+                        }
+                        m.y = m.nowY;
+                    }
+                }
+
                 if (!isCount) {
                     deltaY = 0; // 在这里要归0.
                 }
                 //Log.e("test","按下y：\t"+preY+"\tnowY：\t"+nowY+"\t距离:\t"+deltaY+"\t是否移动:\t"+isNeedMove());
                 y = nowY;
-                // 当滚动到最上或者最下时就不会再滚动，这时移动布局
-                if (isNeedMove()) {
+//                Log.e("test", "deltaY滑动:\t" + deltaY);
+                // 当滚动到最上或者最下时就不会再滚动，这时移动布局/速度大于了200都是异常。不做移动处理
+                if (isNeedMove() && Math.abs(deltaY) < 200) {
                     // 初始化头部矩形
                     if (normal.isEmpty()) {
                         // 保存正常的布局位置
@@ -232,8 +277,15 @@ public class BounceScrollView extends NestedScrollView {
                                 inner.getRight(), inner.getBottom());
                     }
                     // 移动布局
-                    inner.layout(inner.getLeft(), inner.getTop() - deltaY / 2,
-                            inner.getRight(), inner.getBottom() - deltaY / 2);
+                    int top = inner.getTop() - deltaY / 2;
+                    int bottom = inner.getBottom() - deltaY / 2;
+                    //移动最大不能超过总高度的一半
+                    if (top < getHeight() / 2 && bottom > getHeight() / 2 && !bAnime) {
+                        inner.layout(inner.getLeft(), top,
+                                inner.getRight(), bottom);
+                    } else {
+                        animation();//恢复原状
+                    }
                 }
                 isCount = true;
                 break;
@@ -247,16 +299,35 @@ public class BounceScrollView extends NestedScrollView {
      * 回缩动画
      */
     public void animation() {
-        // 开启移动动画
-        TranslateAnimation ta = new TranslateAnimation(0, 0, inner.getTop(),
-                normal.top);
-        ta.setDuration(200);
-        inner.startAnimation(ta);
-        // 设置回到正常的布局位置
-        inner.layout(normal.left, normal.top, normal.right, normal.bottom);
+        if (!bAnime) {
+            bAnime = true;//开始动画
+            int top = inner.getTop();
+            // 开启移动动画
+            TranslateAnimation ta = new TranslateAnimation(0, 0, inner.getTop(),
+                    normal.top);
+            ta.setDuration(200);
+            ta.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
 
-        normal.setEmpty();
+                }
 
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    bAnime = false;//动画结束
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+                    bAnime = false;
+                }
+            });
+            inner.startAnimation(ta);
+            // 设置回到正常的布局位置
+            inner.layout(normal.left, normal.top, normal.right, normal.bottom);
+
+            normal.setEmpty();
+        }
     }
 
     // 是否需要开启动画
