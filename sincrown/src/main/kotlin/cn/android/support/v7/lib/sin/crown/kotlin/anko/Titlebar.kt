@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.view.View
+
 import android.widget.TextView
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
