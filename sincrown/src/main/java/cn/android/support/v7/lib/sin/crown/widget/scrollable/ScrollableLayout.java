@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Build;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -72,7 +73,9 @@ public class ScrollableLayout extends LinearLayout {
         return mHelper;
     }
 
-    public ScrollableLayout(Context context) { this(context, null); }
+    public ScrollableLayout(Context context) {
+        this(context, null);
+    }
 
     public ScrollableLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -94,7 +97,7 @@ public class ScrollableLayout extends LinearLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         mHeadView = getChildAt(0);
-        if(mHeadView != null){
+        if (mHeadView != null) {
             measureChildWithMargins(mHeadView, widthMeasureSpec, 0, MeasureSpec.UNSPECIFIED, 0);
             maxY = mHeadView.getMeasuredHeight();
             mHeadHeight = mHeadView.getMeasuredHeight();
@@ -117,8 +120,32 @@ public class ScrollableLayout extends LinearLayout {
         super.onFinishInflate();
     }
 
+    MotionEvent ev;//记录滑动事件
+    View secondView = null;//第二部分View
+
+    //是否触摸第二部View或第一部分View
+    //fixme 这个方法是我自己加的。修复触摸第二部时无效的Bug
+    public boolean isSecondView(MotionEvent ev) {
+        if (ev == null) {
+            return true;
+        }
+        float y = ev.getY() + getScrollY();
+        if (secondView != null) {
+            //Log.e("test","第二y：\t"+secondView.getY()+"\t高度:\t"+secondView.getHeight()+"\ty:\t"+y);
+            if (y < secondView.getY() + secondView.getHeight()) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (getChildCount() > 2) {
+            secondView = getChildAt(1);
+        }
+        return true;
+    }
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        this.ev = ev;
         float currentX = ev.getX();
         float currentY = ev.getY();
         float deltaY;
@@ -161,7 +188,7 @@ public class ScrollableLayout extends LinearLayout {
                     }
                 }
 
-                if (flag2 && shiftY > mTouchSlop && shiftY > shiftX && (!isSticked() || mHelper.isTop())) {
+                if (flag2 && shiftY > mTouchSlop && shiftY > shiftX && (!isSticked() || mHelper.isTop() || isSecondView(ev))) {
                     if (childViewPager != null) {
                         childViewPager.requestDisallowInterceptTouchEvent(true);
                     }
@@ -244,7 +271,8 @@ public class ScrollableLayout extends LinearLayout {
                     scrollTo(0, currY);
                 }
             } else {
-                if (mHelper.isTop()) {
+
+                if (mHelper.isTop() || isSecondView(ev)) {
                     int deltaY = (currY - mLastScrollerY);
                     int toY = getScrollY() + deltaY;
                     scrollTo(0, toY);
@@ -333,7 +361,7 @@ public class ScrollableLayout extends LinearLayout {
     }
 
     public boolean isCanPullToRefresh() {
-        if (getScrollY() <= 0 && mHelper.isTop() && !mIsHorizontalScrolling) {
+        if (getScrollY() <= 0 && (mHelper.isTop() || isSecondView(ev)) && !mIsHorizontalScrolling) {
             return true;
         }
         return false;
