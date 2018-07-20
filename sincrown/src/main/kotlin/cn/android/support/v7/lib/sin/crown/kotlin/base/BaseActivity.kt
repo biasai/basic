@@ -10,6 +10,12 @@ import cn.android.support.v7.lib.sin.crown.kotlin.common.Toast
  * Created by 彭治铭 on 2018/6/24.
  */
 open class BaseActivity : AppCompatActivity() {
+
+    //这里不使用activity变量(防止累成泄露)，就直接使用get方法获取。
+    fun getActivity(): BaseActivity {
+        return this
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // 将当前Activity添加到栈中
