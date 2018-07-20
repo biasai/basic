@@ -1,4 +1,4 @@
-package cn.android.support.v7.lib.sin.crown.kotlin.widget
+package cn.android.support.v7.lib.sin.crown.kotlin.widget.recycler
 
 import android.graphics.Canvas
 import android.graphics.Paint
