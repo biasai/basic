@@ -9,7 +9,7 @@ import android.view.*
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseDialog
 import cn.android.support.v7.lib.sin.crown.kotlin.https.Bitmaps
-import cn.android.support.v7.lib.sin.crown.kotlin.widget.DotsView
+import cn.android.support.v7.lib.sin.crown.kotlin.widget.viewpager.DotsView
 import cn.android.support.v7.lib.sin.crown.utils.AssetsUtils
 import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils
 
