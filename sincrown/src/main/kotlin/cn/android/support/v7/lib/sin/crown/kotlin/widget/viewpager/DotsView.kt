@@ -1,4 +1,4 @@
-package cn.android.support.v7.lib.sin.crown.kotlin.widget
+package cn.android.support.v7.lib.sin.crown.kotlin.widget.viewpager
 
 import android.content.Context
 import android.graphics.Canvas
@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.utils.ProportionUtils
 
 /**
@@ -43,13 +42,13 @@ open class DotsView: View {
         return this
     }
 
-    var radius = ProportionUtils.getInstance().adapterInt(15 / 2)//园点半径
+    var radius = ProportionUtils.getInstance().adapterInt(15 / 2)//圆点半径
     fun radius(radius: Int = this.radius): DotsView {
         this.radius = radius
         return this
     }
 
-    var offset = ProportionUtils.getInstance().adapterInt(30)//园点半径
+    var offset = ProportionUtils.getInstance().adapterInt(30)//圆点之间的间隙
     fun offset(offset: Int = this.offset): DotsView {
         this.offset = offset
         return this
@@ -61,9 +60,10 @@ open class DotsView: View {
         return this
     }
 
-    var selectPosition = 0//选中下标
+    private var selectPosition = 0//选中下标
     fun selectPosition(selectPosition: Int=this.selectPosition): DotsView {
         this.selectPosition = selectPosition
+        invalidate()
         return this
     }
 

@@ -22,8 +22,8 @@ open class BaseView : View {
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
 
 
-    //自定义画布，根据需求。自主实现
-    open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+    //fixme 自定义画布，根据需求。自主实现
+    protected open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //自定义，重新绘图
     open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): BaseView {
@@ -32,9 +32,21 @@ open class BaseView : View {
         return this
     }
 
+    //fixme 什么都不做，交给子类去实现绘图
+    //fixme 之所以会有这个方法。是为了保证自定义的 draw和onDraw的执行顺序。始终是在最后。
+    protected open fun draw2(canvas: Canvas, paint: Paint) {}
+
+    protected open fun onDraw2(canvas: Canvas, paint: Paint) {}
+
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
         canvas?.let {
+            var paint = Paint()
+            paint.isAntiAlias = true
+            paint.isDither = true
+            paint.style = Paint.Style.FILL_AND_STROKE
+            paint.strokeWidth = 0f
+            draw2(it, paint)
             draw?.let {
                 var paint = Paint()
                 paint.isAntiAlias = true
@@ -48,7 +60,7 @@ open class BaseView : View {
 
     //fixme 画自己【onDraw在draw()的super.draw(canvas)流程里面，即在它的前面执行】
     //fixme 可以认为 draw()是前景[上面后画]，onDraw是背景[下面先画]。
-    var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
+    protected var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //fixme 画自己[onDraw与系统名冲突，所以加一个横线]
     fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): BaseView {
@@ -60,6 +72,12 @@ open class BaseView : View {
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         canvas?.let {
+            var paint = Paint()
+            paint.isAntiAlias = true
+            paint.isDither = true
+            paint.style = Paint.Style.FILL_AND_STROKE
+            paint.strokeWidth = 0f
+            onDraw2(it, paint)
             onDraw?.let {
                 var paint = Paint()
                 paint.isAntiAlias = true
