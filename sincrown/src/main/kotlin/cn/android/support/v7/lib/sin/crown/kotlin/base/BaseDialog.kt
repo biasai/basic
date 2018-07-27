@@ -108,10 +108,16 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0, isStatus: Bool
                 super.onAttachedToWindow()
                 //附加到窗口,每次显示的时候都会调用
                 listener()
+                onListener?.let {
+                    it()
+                }//在listener的后面调用
             }
 
             override fun onDetachedFromWindow() {
                 super.onDetachedFromWindow()
+                onRecycleView?.let {
+                    it()
+                }//在recycleView的前面调用
                 //从当前窗口移除。每次dismiss的时候都会调用
                 recycleView()
             }
@@ -208,8 +214,22 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0, isStatus: Bool
     //事件，弹窗每次显示时，都会调用
     protected abstract fun listener()
 
+    private var onListener: (() -> Unit)? = null
+    //显示监听
+    fun onListener(onListener: () -> Unit): BaseDialog {
+        this.onListener = onListener
+        return this
+    }
+
     //事件，弹窗每次消失时，都会调用
     protected abstract fun recycleView()
+
+    var onRecycleView: (() -> Unit)? = null
+    //消失监听
+    fun onRecycleView(onRecycleView: () -> Unit): BaseDialog {
+        this.onRecycleView = onRecycleView
+        return this
+    }
 
     //防止内存泄漏
     //在activity结束时记得手动调用一次
@@ -243,4 +263,3 @@ abstract class BaseDialog(activity: Activity?, layoutId: Int = 0, isStatus: Bool
     }
 
 }
-
