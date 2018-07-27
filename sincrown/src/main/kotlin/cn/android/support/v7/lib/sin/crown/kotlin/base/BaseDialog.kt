@@ -25,7 +25,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.R
 abstract class BaseDialog(activity: Activity?, layoutId: Int = 0, isStatus: Boolean = true, isTransparent: Boolean = true) {
     //fixme Activity不要使用全局变量。局部即可。防止内存泄露
     //fixme 不要使用单列模式，一个Activity就对应一个Dialog。（Dialog需要Activity的支持）
-    internal var dialog: Dialog? = null
+    var dialog: Dialog? = null
 
     //fixme 如果传入的xml布局为空。则可重写以下方法来创建视图View,一般都是重写的该方法。
     open fun onCreateView(context: Context): View? {
