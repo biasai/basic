@@ -103,7 +103,11 @@ object Titlebar {
                     if (topBar.backColor != Color.TRANSPARENT) {//颜色透明就什么都不做
                         if (topBar.backColor == Color.WHITE) {
                             //返回键图片默认就是白色
-                            background = resources.getDrawable(R.mipmap.crown_back_white)
+                            if(android.os.Build.VERSION.SDK_INT>=16){
+                                background = resources.getDrawable(R.mipmap.crown_back_white)
+                            }else{
+                                setBackgroundResource(R.mipmap.crown_back_white)
+                            }
                         } else {
                             var key = "backBitmap:\t" + topBar.backColor
                             var bitmap: Bitmap? = CacheUtils.getInstance().getAsBitmap(key)
@@ -150,7 +154,8 @@ object Titlebar {
                 //底部阴影分割线
                 view {
                     id = px.id("shadow_view_bottom")
-                    background = resources.getDrawable(R.drawable.crown_shadow_line_up_to_down)//阴影线，方向从上往下
+                    //background = resources.getDrawable(R.drawable.crown_shadow_line_up_to_down)//阴影线，方向从上往下
+                    setBackgroundResource(R.drawable.crown_shadow_line_up_to_down)
                     if (topBar.shadow) {
                         visibility = View.VISIBLE
                     } else {

@@ -3,11 +3,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.github.dcendents.android-maven'
 android {
-    compileSdkVersion 27
+    compileSdkVersion 26//为了兼容，竟可能的小。为了兼容kotlin的anko,最小也得26。不然报错。放心这个不会和主moudle冲突。
 
     defaultConfig {
+        //minSdkVersion 主工程的最低版本要求不能低于库工程
+        //targetSdkVersion：同样，主工程不能低于库工程
         minSdkVersion 14 //如果不写的话，默认就是1。14 是4.0; 21是5.0;23是6.0;24是7.0;26是8.0
-        targetSdkVersion 27
+        //targetSdkVersion 27 防止冲突，最好不写。交给主moudle去写。
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -39,7 +41,7 @@ configurations.all {
     }
 }
 
-ext.anko_version='0.10.5'
+ext.anko_version = '0.10.5'
 gradle.ext.sinSupportVersion = '27.1.1'
 
 dependencies {
