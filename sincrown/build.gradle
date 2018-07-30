@@ -6,7 +6,7 @@ android {
     compileSdkVersion 27
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 14 //如果不写的话，默认就是1。14 是4.0; 21是5.0;23是6.0;24是7.0;26是8.0
         targetSdkVersion 27
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
