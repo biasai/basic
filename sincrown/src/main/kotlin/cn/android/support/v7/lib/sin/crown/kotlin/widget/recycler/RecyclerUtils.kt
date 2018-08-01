@@ -1,4 +1,4 @@
-package com.finance.forward.utils
+package cn.android.support.v7.lib.sin.crown.kotlin.widget.recycler
 
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
