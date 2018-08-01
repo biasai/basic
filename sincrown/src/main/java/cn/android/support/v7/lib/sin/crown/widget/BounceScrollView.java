@@ -2,12 +2,14 @@ package cn.android.support.v7.lib.sin.crown.widget;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.NestedScrollView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 
@@ -281,7 +283,7 @@ public class BounceScrollView extends NestedScrollView {
                     int bottom = inner.getBottom() - deltaY / 2;
                     //移动最大不能超过总高度的一半
                     if (top < getHeight() / 2 && bottom > getHeight() / 2 && !bAnime) {
-                        inner.layout(inner.getLeft(), top,
+                        layout2(inner.getLeft(), top,
                                 inner.getRight(), bottom);
                     } else {
                         animation();//恢复原状
@@ -324,9 +326,37 @@ public class BounceScrollView extends NestedScrollView {
             });
             inner.startAnimation(ta);
             // 设置回到正常的布局位置
-            inner.layout(normal.left, normal.top, normal.right, normal.bottom);
+            layout2(normal.left, normal.top, normal.right, normal.bottom);
 
             normal.setEmpty();
+        }
+    }
+
+    int topM = -30000;
+    ViewGroup.MarginLayoutParams layoutParams = null;
+    int tt = 0;
+
+    public void layout2(int l, int t, int r, int b) {
+        //inner.layout(l, t, r, b);//原始方法
+        //解决ViewPager滑动时无效问题。所以使用外补丁。
+        if (inner != null) {
+            if (layoutParams == null) {
+                layoutParams = (ViewGroup.MarginLayoutParams) inner.getLayoutParams();
+            }
+            if (topM <= -30000) {
+                topM = layoutParams.topMargin;//保存原始顶部外补丁。
+            }
+
+            tt = t + topM;//补丁为负数同样有效。4.2的系统外补丁不支持负数。
+            if (Build.VERSION.SDK_INT <= 17 && tt < 0) {
+                inner.layout(l, t, r, b);//viewpager滑动时，会无效。
+            } else {
+                layoutParams.setMargins((int) (layoutParams.leftMargin), tt, (int) (layoutParams.rightMargin), (int) (layoutParams.bottomMargin));
+                inner.requestLayout();
+            }
+            //layoutParams.setMargins((int) (layoutParams.leftMargin), tt, (int) (layoutParams.rightMargin), (int) (layoutParams.bottomMargin));
+            //Log.e("test", "t:\t"+t+"\ttt:\t" + tt);
+
         }
     }
 
@@ -371,12 +401,23 @@ public class BounceScrollView extends NestedScrollView {
 
     private ScrollViewForTabListener scrollViewForTabListener;
 
+    //fixme 接口，监听Scroll的滑动状态改变。滑动坐标。
     public void setScrollViewForTabListener(ScrollViewForTabListener scrollViewForTabListener) {
         this.scrollViewForTabListener = scrollViewForTabListener;
     }
 
     public interface ScrollViewForTabListener {
+        //x,y是当前scroll滑动的坐标,oldx,oldy是记录上一次的滑动坐标。
         void onScrollChanged(BounceScrollView bounceScrollView, int x, int y, int oldx, int oldy);
     }
+//    调用案例。（Kotlin自带高阶函数）
+//                setScrollViewForTabListener { bounceScrollView, x, y, oldx, oldy ->
+//                    Log.e("test","x:\t"+x+"\ty:\t"+y+"\toldx:\t"+oldx+"\toldy:\t"+oldy)
+//                    if(y>oldy){
+//                        //向下滚动（下面的内容显示出来。）
+//                    }else if(y<oldy){
+//                        //向上滚动（上面的内容显示出来）
+//                    }
+//                }
 
 }
