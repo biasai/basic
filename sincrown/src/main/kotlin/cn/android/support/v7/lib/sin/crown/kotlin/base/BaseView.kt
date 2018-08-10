@@ -2,9 +2,11 @@ package cn.android.support.v7.lib.sin.crown.kotlin.base
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 
 /**
  * 无论是自定义view还是普通的layout布局。都不能在async和launch协程里面初始化，要么报错，要么不显示。
@@ -41,19 +43,9 @@ open class BaseView : View {
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
         canvas?.let {
-            var paint = Paint()
-            paint.isAntiAlias = true
-            paint.isDither = true
-            paint.style = Paint.Style.FILL_AND_STROKE
-            paint.strokeWidth = 0f
-            draw2(it, paint)
+            draw2(it, getPaint())
             draw?.let {
-                var paint = Paint()
-                paint.isAntiAlias = true
-                paint.isDither = true
-                paint.style = Paint.Style.FILL_AND_STROKE
-                paint.strokeWidth = 0f
-                it(canvas, paint)
+                it(canvas, getPaint())
             }
         }
     }
@@ -72,19 +64,45 @@ open class BaseView : View {
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         canvas?.let {
-            var paint = Paint()
-            paint.isAntiAlias = true
-            paint.isDither = true
-            paint.style = Paint.Style.FILL_AND_STROKE
-            paint.strokeWidth = 0f
-            onDraw2(it, paint)
+            onDraw2(it, getPaint())
             onDraw?.let {
-                var paint = Paint()
-                paint.isAntiAlias = true
-                paint.isDither = true
-                paint.style = Paint.Style.FILL_AND_STROKE
-                paint.strokeWidth = 0f
-                it(canvas, paint)
+                it(canvas, getPaint())
+            }
+        }
+    }
+
+    /**
+     * 获取新画笔
+     */
+    fun getPaint(): Paint {
+        var paint = Paint()
+        paint.isAntiAlias = true
+        paint.isDither = true
+        paint.color = Color.WHITE
+        paint.textAlign = Paint.Align.CENTER
+        paint.textSize = px.x(12f)
+        paint.style = Paint.Style.FILL_AND_STROKE
+        paint.strokeWidth = 0f
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.strokeJoin = Paint.Join.ROUND
+        return paint
+    }
+
+    companion object {
+        /**
+         * 画垂直文本
+         * x,y 是文本的起点位置
+         * offset 垂直文本之间的间隙
+         */
+        fun drawVerticalText(text: String, canvas: Canvas, paint: Paint, x: Float, y: Float, offset: Float) {
+            var list = text.toList()
+            for (i in 0 until text.length) {
+                var h = paint.textSize
+                if (i == 0) {
+                    canvas.drawText(list[i].toString(), x, y + h, paint)
+                } else {
+                    canvas.drawText(list[i].toString(), x, y + (i + 1) * h + (i * offset), paint)
+                }
             }
         }
     }

@@ -11,7 +11,7 @@ import android.graphics.PaintFlagsDrawFilter
 /**
  * X轴，水平方向。从左到右。
  */
-class XAxis : BaseView {
+class YAxis : BaseView {
     //关闭硬件加速。不然在部分手机，如小米。线条与线条之间的连接处有锯齿。
     constructor(context: Context?) : super(context, false) {}
 
@@ -26,57 +26,57 @@ class XAxis : BaseView {
     var default = -1f//默认值。
     var strokeWidth: Float = px.x(1.5f)//边框的宽度
     var strokeColor: Int = Color.parseColor("#bcbec0")//边框颜色
-    //fixme 起点,终点X坐标[方向从左往右]
-    var startX: Float = default
-    var stopX: Float = default
+    //fixme 起点,终点X坐标[方向从下往上],切记，设计是从下往上的思路！
+    var startY: Float = default//fixme 因为方向是从下往上。所以这个值其实是最大的
+    var stopY: Float = default//fixme 这个最小
     //起点结束Y坐标(y坐标就一个，如果要画倾斜的线，直接rotation=30f旋转整个控件即可，旋转控件不会有锯齿，直接画斜线会有锯齿。)
-    var startAndStopY: Float = default
+    var startAndStopX: Float = default
 
     var unit: Float = default//fixme 单位长度。总长度就是控件本身长度。优先级高于count 。
     /**
      * fixme 根据单位获取X坐标值。1就等于一个unit的长度。
      */
-    fun getUnitX(unit: Float): Float {
-        return this.unit * unit + startX
+    fun getUnitY(unit: Float): Float {
+        return startY - this.unit * unit
     }
 
-    fun getUnitX(unit: Int): Float {
-        return getUnitX(unit.toFloat())
+    fun getUnitY(unit: Int): Float {
+        return getUnitY(unit.toFloat())
     }
 
     var count: Int = default.toInt()//显示的个数
     var rulerStrokeWidth: Float = strokeWidth//单位线条的宽度
     var rulerStrokeColor: Int = strokeColor//单位线条的颜色
-    var rulerStartY: Float = default//单位线条开始Y坐标
-    var rulerStopY: Float = default//单位线条结束Y坐标
+    var rulerStartX: Float = default//单位线条开始X坐标
+    var rulerStopX: Float = default//单位线条结束X坐标
 
     var arrowLength: Float = default//X轴最右边箭头的长度。
     var arrowStrokeWidth: Float = default//箭头边框的宽度
     var arrowStrokeColor: Int = strokeColor//箭头线条的颜色
 
-    var realWidth: Float = default//X轴实际长度
+    var realHeight: Float = default//Y轴实际高度
     override fun onDraw2(canvas: Canvas, paint: Paint) {
         super.onDraw2(canvas, paint)
         paint.style = Paint.Style.STROKE
         //设置边框线帽，边框小了，看不出效果。
         paint.strokeCap = Paint.Cap.ROUND
         paint.strokeJoin = Paint.Join.ROUND
-        if (startX <= default) {
-            startX = strokeWidth
+        if (startY <= default) {
+            startY = height.toFloat() - strokeWidth * 2
         }
-        if (stopX <= default) {
-            stopX = width.toFloat() - strokeWidth * 2
+        if (stopY <= default) {
+            stopY = strokeWidth
         }
-        if (startAndStopY <= default) {
-            startAndStopY = height / 2f//默认垂直居中
+        if (startAndStopX <= default) {
+            startAndStopX = width / 2f//默认水平居中
         }
 
-        realWidth = stopX - startX
+        realHeight = startY - stopY
         if (unit <= default && count > 0) {
-            unit = (realWidth / count).toFloat()
+            unit = (realHeight / count).toFloat()
         }
         if (count <= default && unit > 0) {
-            count = (realWidth / unit).toInt()
+            count = (realHeight / unit).toInt()
         }
 
         if (arrowLength <= default) {
@@ -84,33 +84,33 @@ class XAxis : BaseView {
         }
 
         if (unit > 0 && count > 0) {
-            if (rulerStartY <= default) {
-                rulerStartY = startAndStopY - strokeWidth / 2
+            if (rulerStartX <= default) {
+                rulerStartX = startAndStopX - strokeWidth / 2
             }
-            if (rulerStopY <= default) {
-                rulerStopY = rulerStartY - strokeWidth * 5//直尺的长度。
+            if (rulerStopX <= default) {
+                rulerStopX = rulerStartX + strokeWidth * 5//直尺的长度。
             }
             paint.strokeWidth = rulerStrokeWidth
             paint.color = rulerStrokeColor
-            //画X轴上的单位直尺
+            //画Y轴上的单位直尺
             for (i in 0..count) {
-                var x = i * unit + startX
+                var y = startY - i * unit
                 if (i != 0) {//fixme 第一个不画
                     if (i == count) {
                         var p = 0f
                         if (arrowLength > 0) {
                             p = arrowLength + strokeWidth
                         }
-                        if (x < (stopX - unit / 3 - p)) {//fixme 最后一个距离少于单位长度的三分之一，也不画。
-                            canvas.drawLine(x, rulerStartY, x, rulerStopY, paint)
+                        if (y > (stopY + unit / 3 + p)) {//fixme 最后一个距离少于单位长度的三分之一，也不画。
+                            canvas.drawLine(rulerStartX, y, rulerStopX, y, paint)
                         }
                     } else {
-                        canvas.drawLine(x, rulerStartY, x, rulerStopY, paint)
+                        canvas.drawLine(rulerStartX, y, rulerStopX, y, paint)
                     }
                 }
                 //画X轴上的单位文字
                 drawUnitText?.let {
-                    it(canvas, x, startAndStopY, i)
+                    it(canvas, startAndStopX, y, i)
                 }
             }
         }
@@ -121,10 +121,10 @@ class XAxis : BaseView {
         paint.color = strokeColor
         paint.isDither = true
         paint.isAntiAlias = true
-        canvas.drawLine(startX, startAndStopY, stopX, startAndStopY, paint)
+        canvas.drawLine(startAndStopX, startY, startAndStopX, stopY, paint)
         //画原点
         drawOrigin?.let {
-            it(canvas, startX, startAndStopY)
+            it(canvas, startAndStopX, startY)
         }
 
         //画终点箭头
@@ -135,15 +135,15 @@ class XAxis : BaseView {
             paint.strokeWidth = arrowStrokeWidth
             paint.color = arrowStrokeColor
             var path = Path()
-            path.moveTo(stopX - arrowLength, startAndStopY - arrowLength)
-            path.lineTo(stopX + strokeWidth / 2, startAndStopY)
-            path.lineTo(stopX - arrowLength, startAndStopY + arrowLength)
+            path.moveTo(startAndStopX - arrowLength, stopY + arrowLength)
+            path.lineTo(startAndStopX, stopY - strokeWidth / 2)
+            path.lineTo(startAndStopX + arrowLength, stopY + arrowLength)
             canvas.drawPath(path, paint)
         }
 
         //画终点
         drawEnd?.let {
-            it(canvas, stopX, startAndStopY)
+            it(canvas, startAndStopX, stopY)
         }
 
     }
