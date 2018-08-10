@@ -310,4 +310,108 @@ public class AppUtils {
 
         return resultData;
     }
+
+    /**
+     * 查询手机内系统应用(不需要,小米手机能够正确获取。部分手机就不行。如华为荣耀6就不行。)
+     *
+     * @param context
+     * @return
+     */
+    public List<PackageInfo> getAllSysApps(Context context) {
+        List<PackageInfo> apps = new ArrayList<PackageInfo>();
+        PackageManager pManager = context.getPackageManager();
+        //获取手机内所有应用
+        List<PackageInfo> paklist = pManager.getInstalledPackages(0);
+        for (int i = 0; i < paklist.size(); i++) {
+            PackageInfo pak = (PackageInfo) paklist.get(i);
+            //判断系统预装的应用程序
+            if (!((pak.applicationInfo.flags & pak.applicationInfo.FLAG_SYSTEM) <= 0)) {
+                apps.add(pak);
+                //Log.e("test", "包名:\t" + pak.packageName + "\t应用名:\t" + pManager.getApplicationLabel(pak.applicationInfo).toString());
+            }
+        }
+        return apps;
+    }
+
+    /**
+     * 获取所有应用包名
+     * @param context
+     * @return
+     */
+    public List<PackageInfo> getAllApps(Context context) {
+        List<PackageInfo> apps = new ArrayList<PackageInfo>();
+        PackageManager pManager = context.getPackageManager();
+        //获取手机内所有应用
+        List<PackageInfo> paklist = pManager.getInstalledPackages(0);
+        for (int i = 0; i < paklist.size(); i++) {
+            PackageInfo pak = (PackageInfo) paklist.get(i);
+            //Log.e("test", "包名:\t" + pak.packageName + "\t应用名:\t" + pManager.getApplicationLabel(pak.applicationInfo).toString());
+        }
+        return apps;
+    }
+
+    /**
+     * 获取系统相册包名
+     *
+     * @param context
+     * @return
+     */
+    public String getGalleryPackName(Context context) {
+        String packagename = null;
+        PackageManager pManager = context.getPackageManager();
+        List<PackageInfo> appList = getAllSysApps(context);
+        for (int i = 0; i < appList.size(); i++) {
+            PackageInfo pinfo = appList.get(i);
+            String name = pManager.getApplicationLabel(pinfo.applicationInfo).toString().trim();
+            if (("画廊").equals(name) || ("图库").equals(name) || ("图片库").equals(name) || ("图册").equals(name) || ("相册").equals(name) || ("相薄").equals(name) || ("相片").equals(name) || ("照片").equals(name) || ("图片").equals(name) || ("美图").equals(name)) {
+                packagename = pinfo.packageName;
+                //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
+                break;
+            }
+            if (("畫廊").equals(name) || ("圖庫").equals(name) || ("圖片庫").equals(name) || ("圖冊").equals(name) || ("相簿").equals(name) || ("圖片").equals(name) || ("美圖").equals(name)) {
+                packagename = pinfo.packageName;
+                //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
+                break;
+            }
+            if (("Gallery").equals(name) || ("Photo").equals(name) || ("Picture").equals(name)) {
+                packagename = pinfo.packageName;
+                //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
+                break;
+            }
+            if (("gallery").equals(name) || ("photo").equals(name) || ("picture").equals(name)) {
+                packagename = pinfo.packageName;
+                //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
+                break;
+            }
+        }
+        return packagename;
+    }
+
+    /**
+     * 获取系统相机包名
+     *
+     * @param context
+     * @return
+     */
+    public String getCameraPackName(Context context) {
+        String packagename = null;
+        PackageManager pManager = context.getPackageManager();
+        List<PackageInfo> appList = getAllSysApps(context);
+        for (int i = 0; i < appList.size(); i++) {
+            PackageInfo pinfo = appList.get(i);
+            String name = pManager.getApplicationLabel(pinfo.applicationInfo).toString().trim();
+            if (("相机").equals(name) || ("相機").equals(name) || ("照相机").equals(name) || ("照相機").equals(name) || ("照片机").equals(name) || ("Camera").equals(name) || ("camera").equals(name)) {
+                packagename = pinfo.packageName;
+                //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
+                break;
+            }
+            if (("照相馆").equals(name) || ("相馆").equals(name) || ("照相館").equals(name) || ("相館").equals(name)) {
+                packagename = pinfo.packageName;
+                //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
+                break;
+            }
+        }
+        return packagename;
+    }
+
 }

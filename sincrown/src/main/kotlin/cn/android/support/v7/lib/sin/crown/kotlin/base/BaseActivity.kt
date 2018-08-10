@@ -1,10 +1,13 @@
 package cn.android.support.v7.lib.sin.crown.kotlin.base
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Window
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.common.Toast
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.PermissionUtils
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.PictureUtils
 
 /**
  * Created by 彭治铭 on 2018/6/24.
@@ -83,6 +86,16 @@ open class BaseActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        PermissionUtils.onRequestPermissionsResult(getActivity(), requestCode, permissions, grantResults)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        PictureUtils.onActivityResult(this, requestCode, resultCode, data)
     }
 
 }

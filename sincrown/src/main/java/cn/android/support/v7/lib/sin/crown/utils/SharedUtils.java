@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.Build;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.File;
@@ -73,8 +75,25 @@ public class SharedUtils {
                 File f = new File(imgPath);
                 if (f != null && f.exists() && f.isFile()) {
                     intent.setType("image/png");
-                    Uri u = Uri.fromFile(f);
-                    intent.putExtra(Intent.EXTRA_STREAM, u);
+
+                    Uri fileUri=null;
+                    if (Build.VERSION.SDK_INT >= 23) {//7.0及以上版本(版本号24),为了兼容6.0(版本号23)，防止6.0也可能会有这个问题。
+                        //getPackageName()和${applicationId}显示的都是当前应用的包名。无论是在library还是moudle中，都是一样的。都显示的是当前应用moudle的。与类库无关。请放心使用。
+                        fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", //与android:authorities="${applicationId}.provider"对应上
+                                f);
+                    } else {
+                        fileUri = Uri.fromFile(f);
+                    }
+                    //share.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                    intent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                    //以下两个addFlags必不可少。【以防万一出错】
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+//                    Uri u = Uri.fromFile(f);
+//                    intent.putExtra(Intent.EXTRA_STREAM, u);
+                    intent.putExtra(Intent.EXTRA_STREAM, fileUri);
+
                 }
             }
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -195,7 +214,21 @@ public class SharedUtils {
     public static void shareFile(Context context, File file) {
         if (null != file && file.exists()) {
             Intent share = new Intent(Intent.ACTION_SEND);
-            share.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+
+            Uri fileUri=null;
+            if (Build.VERSION.SDK_INT >= 23) {//7.0及以上版本(版本号24),为了兼容6.0(版本号23)，防止6.0也可能会有这个问题。
+                //getPackageName()和${applicationId}显示的都是当前应用的包名。无论是在library还是moudle中，都是一样的。都显示的是当前应用moudle的。与类库无关。请放心使用。
+                fileUri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", //与android:authorities="${applicationId}.provider"对应上
+                        file);
+            } else {
+                fileUri = Uri.fromFile(file);
+            }
+            //share.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+            share.putExtra(Intent.EXTRA_STREAM, fileUri);
+            //以下两个addFlags必不可少。【以防万一出错】
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            share.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
             share.setType(getMimeType(file.getAbsolutePath()));//此处可发送多种文件
             share.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);

@@ -9,7 +9,6 @@ import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.NinePatchDrawable;
-import android.util.Base64;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,10 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseApplication;
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.PictureUtils;
 
 
 /**
@@ -85,7 +82,7 @@ public class AssetsUtils {
             map.get(key).recycle();
             map.remove(key);
 //            Log.e("test","位图释放1:\t"+key);
-        }else if(map.containsKey(key)){
+        } else if (map.containsKey(key)) {
             map.remove(key);
 //            Log.e("test","位图释放2:\t"+key);
         }
@@ -103,6 +100,19 @@ public class AssetsUtils {
      */
     public String getAssetsPath(String fileName) {
         return "file:///android_asset/" + fileName;
+    }
+
+    /**
+     * 保存Bitmap位图到本地。
+     * 兼容以前。首页保留这个方法。
+     *
+     * @param bitmap
+     * @param path    路径 如：context.getApplicationContext().getFilesDir().getAbsolutePath();
+     * @param picName 图片名称，记得要有.png的后缀。【一定要加.png的后缀】
+     * @return 返回保存文件
+     */
+    public File saveBitmap(Bitmap bitmap, String path, String picName) {
+        return FileUtils.getInstance().saveBitmap(bitmap, path, picName);
     }
 
     /**
@@ -138,143 +148,43 @@ public class AssetsUtils {
     }
 
     /**
-     * 保存Bitmap位图到本地。
-     *
-     * @param bitmap
-     * @param path    路径 如：context.getApplicationContext().getFilesDir().getAbsolutePath();
-     * @param picName 图片名称，记得要有.png的后缀。【一定要加.png的后缀】
-     * @return 返回保存文件
-     */
-    public File saveBitmap(Bitmap bitmap, String path, String picName) {
-        File file = new File(path, picName);
-        FileOutputStream out = null;
-        if (file.exists()) {
-            file.delete();
-        }
-        try {
-            file.createNewFile();
-            out = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.flush();
-        } catch (Exception e) {
-            Log.e("test", "Bitmap位图保存异常:\t" + e.getMessage());
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException e) {
-                Log.e("test", "Bitmap位图保存异常2:\t" + e.getMessage());
-            }
-        }
-        return file;
-    }
-
-
-    /**
-     * 这里Base64是安卓原生。但是不管是安卓原生还是第三方的。Base64都是一样的。
-     * <p>
-     * 之所以要使用64加密字符串，是因为64解码出来的字节与原有文件字节大小一模一样，不会发生任何改变。
-     * <p>
-     * String与byte直接转换。太危险。由于特殊符号。比如空格等。数据肯定会丢失(这样file肯定就无法正确转换成bitmap了)。
-     * 所以一般的做法就是是弄成比如Base64这样的
-     * <p>
-     * 文件转base64字符串
-     *
-     * @param file 文件
-     * @return 返回64加密的字符串。Base64.decode(base64, Base64.DEFAULT);// 将字符串转换为byte数组
-     */
-    public String fileToBase64(File file) {
-        String base64 = null;
-        InputStream in = null;
-        try {
-            in = new FileInputStream(file);
-            byte[] bytes = new byte[in.available()];
-            int length = in.read(bytes);
-            base64 = Base64.encodeToString(bytes, 0, length, Base64.DEFAULT);
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        return base64;
-    }
-
-
-    /**
-     * base64字符串转文件
-     *
-     * @param base64 加密字符
-     * @param file   文件(file.toString()与file.getAbsolutePath()一样都是返回绝对路径(包括后缀名)，file.getName()文件名(包括后缀名))
-     * @return
-     */
-    public File base64ToFile(String base64, File file) {
-        FileOutputStream out = null;
-        try {
-            // 解码，然后将字节转换为文件
-            if (!file.exists())
-                file.createNewFile();
-            byte[] bytes = Base64.decode(base64, Base64.DEFAULT);// 将字符串转换为byte数组
-            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-            byte[] buffer = new byte[1024];
-            out = new FileOutputStream(file);
-            int bytesum = 0;
-            int byteread = 0;
-            while ((byteread = in.read(buffer)) != -1) {
-                bytesum += byteread;
-                out.write(buffer, 0, byteread); // 文件写操作
-            }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        return file;
-    }
-
-
-    /**
      * 从本地加载Bitmap
      *
      * @param pathName  图片完整路径，保存路径和文件后缀名。
      * @param isRGB_565 true 节省内存(推荐)，false不节省内存(效果较好)
+     * @param isCache   fixme 是否读取缓存[注意了哦。如果图片剪切了，就不要读取缓存哦。]
      * @return
      */
+    public Bitmap getBitmapFromFile(String pathName, boolean isRGB_565, boolean isCache) {
+        return getBitmapFromFile(pathName, isRGB_565, 1, isCache);
+    }
+
     public Bitmap getBitmapFromFile(String pathName, boolean isRGB_565) {
-        return getBitmapFromFile(pathName, isRGB_565, 1);
+        return getBitmapFromFile(pathName, isRGB_565, 1, true);//默认读取缓存
+    }
+
+    public Bitmap getBitmapFromFile(String pathName, boolean isRGB_565, int inSampleSize) {
+        return getBitmapFromFile(pathName, isRGB_565, inSampleSize, true);//默认读取缓存
     }
 
     /**
-     * 获取SD卡上面的，文件。
+     * 根据路径获取SD卡上面的，文件。
      *
      * @param pathName
      * @param isRGB_565
      * @param inSampleSize SD卡上的文件，添加了 采样率。防止内存溢出。1 是正常。2长和宽缩小到2分之一。4就缩小到4分之一。
+     * @param isCache      是否读取缓存
      * @return
      */
-    public Bitmap getBitmapFromFile(String pathName, boolean isRGB_565, int inSampleSize) {
-        String key = pathName;
+    public Bitmap getBitmapFromFile(String pathName, boolean isRGB_565, int inSampleSize, Boolean isCache) {
+        String key = pathName + inSampleSize + isRGB_565;
         Bitmap bitmap = getCacleBitmap(key);//获取缓存位图
-        if (bitmap != null) {
-            return bitmap;//防止重复加载，浪费内存
+        if (bitmap != null && !bitmap.isRecycled()) {
+            if (isCache) {
+                return bitmap;//防止重复加载，浪费内存
+            } else {
+                bitmap.recycle();//释放
+            }
         }
         try {
             if (isRGB_565) {
@@ -282,6 +192,8 @@ public class AssetsUtils {
             } else {
                 bitmap = BitmapFactory.decodeFile(pathName, getOptionsARGB_8888(inSampleSize));
             }
+            //解决图片方向显示不正确的问题。
+            bitmap = PictureUtils.INSTANCE.rotateBitmap(bitmap, pathName);
             //保存当前Bitmap
             setCacleBiatmap(key, bitmap);
         } catch (Exception e) {
@@ -292,7 +204,7 @@ public class AssetsUtils {
 
     /**
      * @param path 文件路径，SD上的路径。不是assets
-     * @return 返回位图的宽或高，谁大返回谁。返回较大的一方。
+     * @return 返回位图的宽或高，谁大返回谁。返回较大的一方。（主要用于计算inSampleSize）
      */
     public int getBitmapSize(String path) {
         /**
@@ -310,6 +222,34 @@ public class AssetsUtils {
 //            BitmapFactory.decodeResource(BaseApplication.getInstance().getResources(), resId, options);
 //        }
         return options.outHeight > options.outWidth ? options.outHeight : options.outWidth;//返回位图宽或高。较大的一个。谁大返回谁。
+    }
+
+    /**
+     * @param path 文件路径，SD上的路径。不是assets
+     * @return 返回位图的宽
+     */
+    public int getBitmapWidth(String path) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        //为true时不会真正加载图片到内存，仅仅是得到图片尺寸信息，存在Options.outHeight和outWidth和outMimeType中
+        options.inJustDecodeBounds = true;
+        if (path != null && !path.trim().equals("")) {
+            BitmapFactory.decodeFile(path, options);
+        }
+        return options.outWidth;//返回位图宽
+    }
+
+    /**
+     * @param path 文件路径，SD上的路径。不是assets
+     * @return 返回位图的高。
+     */
+    public int getBitmapHeight(String path) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        //为true时不会真正加载图片到内存，仅仅是得到图片尺寸信息，存在Options.outHeight和outWidth和outMimeType中
+        options.inJustDecodeBounds = true;
+        if (path != null && !path.trim().equals("")) {
+            BitmapFactory.decodeFile(path, options);
+        }
+        return options.outHeight;//返回位图高
     }
 
     public BitmapFactory.Options getOptionsRGB_565() {
@@ -358,9 +298,9 @@ public class AssetsUtils {
     public Bitmap getBitmapFromAssets(String fileName, int resID, boolean isRGB_565) {
         String key;
         if (fileName != null && !fileName.equals("")) {
-            key = fileName;
+            key = fileName + isRGB_565;
         } else {
-            key = "" + resID;
+            key = "" + resID + isRGB_565;
         }
         //Log.e("test","key：\t"+key);
         Bitmap bitmap = getCacleBitmap(key);//获取缓存位图
@@ -389,7 +329,6 @@ public class AssetsUtils {
                 }
 
             }
-
 //            view.setBackgroundDrawable(bitmapDrawable);//设置背景图片，背景图片会拉升和控件同等大小。即这个方法，背景图片始终和控件同等大小。所以只要对控件进行适配即可。图片保持原图。
 //            bitmap=UtilProportion.getInstance(activity).adapterBitmap(bitmap);//对图片进行统一适配。因为View图片时是放在背景里，背景里的图片不需要做适配。
 //            Log.e("ui", "大小:\t" + bitmap.getByteCount() / 1024 + "KB" + "\t宽度:\t" + bitmap.getWidth() + "\t高度:\t" + bitmap.getHeight() + "\tconfig:\t" + bitmap.getConfig());

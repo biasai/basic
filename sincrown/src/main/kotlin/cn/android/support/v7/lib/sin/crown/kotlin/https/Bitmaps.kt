@@ -31,12 +31,37 @@ import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 //Bitmaps(url,this).showLoad().circle(true).optionsRGB_565(false).strokeColor(Color.CYAN).strokeWidth(px.x(2f)).view(view).Get()
 //Bitmaps(url,this).circle(true).view(view).Get()
 
+//调用案例
+//                    Bitmaps(url, this@MainActivity).circle(true).showLoad().strokeColor(Color.CYAN).view(view2).get()
+//                    Bitmaps().url(url).showLoad(this@MainActivity).Get {
+//                        view?.setBackgroundDrawable(BitmapDrawable(it))
+//                    }
+
 /**
  * 网络位图加载
  */
-class Bitmaps(var url: String?, var activity: Activity? = null) {
+class Bitmaps() {
     //fixme actiivty不为空，跳转到主线程。
     //fixme Activity不为空时，位图才会加载到View上
+    open var url: String? = null
+
+    fun url(url: String): Bitmaps {
+        this.url = url
+        return this
+    }
+
+    open var activity: Activity? = null
+    //fixme activity不为空时，回调到主线程。且进度条也是在Activity不为空时才有效。
+    fun activity(activity: Activity): Bitmaps {
+        this.activity = activity
+        return this
+    }
+
+    constructor(url: String? = null, activity: Activity? = null) : this() {
+        this.url = url
+        this.activity = activity
+    }
+
     var view: View? = null
 
     //设置位图依附的控件，如果不为空。会自动将位图加载到控件上
@@ -96,6 +121,14 @@ class Bitmaps(var url: String?, var activity: Activity? = null) {
     var load: Boolean = false//是否显示进度条，默认不显示，fixme (Activity不能为空，Dialog需要Activity的支持)
     fun showLoad(isLoad: Boolean = true): Bitmaps {
         this.load = isLoad
+        return this
+    }
+
+    fun showLoad(activity: Activity): Bitmaps {
+        this.load = true
+        if (this.activity == null) {
+            this.activity = activity
+        }
         return this
     }
 
@@ -240,6 +273,12 @@ class Bitmaps(var url: String?, var activity: Activity? = null) {
         }, timeOut = timeOut)
     }
 
+    //兼容大小写
+    fun get(callback: ((bitimap: Bitmap) -> Unit)? = null) {
+        Get(callback)
+    }
+
+
     companion object {
         //获取控件位图
         fun getViewBitmap(view: View): Bitmap? {
@@ -368,7 +407,7 @@ class Bitmaps(var url: String?, var activity: Activity? = null) {
             if (bitmap.height < radius) {
                 radius = bitmap.height//半径取位图较小的一边
             }
-            val outBitmap = ProportionUtils.getInstance().GeometricCompressionBitmap(bitmap, radius.toFloat()+strokeWidth)//取位图中间的那一部分（新建一个位图）
+            val outBitmap = ProportionUtils.getInstance().GeometricCompressionBitmap(bitmap, radius.toFloat() + strokeWidth)//取位图中间的那一部分（新建一个位图）
             var canvas = Canvas(outBitmap)
             var paint = Paint()
             paint.style = Paint.Style.STROKE
@@ -379,7 +418,7 @@ class Bitmaps(var url: String?, var activity: Activity? = null) {
             paint.setXfermode(PorterDuffXfermode(PorterDuff.Mode.SRC_OUT))
             canvas.drawCircle(outBitmap.width / 2f, outBitmap.height / 2f, radius.toFloat() / 2 + paint.strokeWidth / 2, paint)
             paint.setXfermode(null)
-            if(strokeWidth>0){
+            if (strokeWidth > 0) {
                 paint.strokeWidth = strokeWidth
                 canvas.drawCircle(outBitmap.width / 2f, outBitmap.height / 2f, radius.toFloat() / 2, paint)
             }
