@@ -256,7 +256,7 @@ public class FileUtils {
 
     public String getDCIMPath() {
         String path = null;
-        if (Build.BRAND.equals("Xiaomi") || Build.BRAND.equals("xiaomi") || Build.BRAND.equals("HUAWEI")) { // 小米手机,华为手机
+        if (Build.BRAND.equals("Xiaomi") || Build.BRAND.trim().toLowerCase().equals("xiaomi") || Build.BRAND.trim().toUpperCase().equals("HUAWEI")) { // 小米手机,华为手机
             path = Environment.getExternalStorageDirectory().getPath() + "/DCIM/Camera/";
         } else {  // Meizu 、Oppo
             path = Environment.getExternalStorageDirectory().getPath() + "/DCIM/";

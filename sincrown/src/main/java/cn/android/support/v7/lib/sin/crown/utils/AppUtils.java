@@ -1,11 +1,16 @@
 package cn.android.support.v7.lib.sin.crown.utils;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -15,10 +20,6 @@ import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseApplication;
 
@@ -259,7 +260,7 @@ public class AppUtils {
     public int getSDKVersion() {
         int osVersion;
         try {
-            osVersion = Integer.valueOf(Build.VERSION.SDK);
+            osVersion = Integer.valueOf(android.os.Build.VERSION.SDK);
         } catch (NumberFormatException e) {
             osVersion = 0;
         }
@@ -378,7 +379,7 @@ public class AppUtils {
                 //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
                 break;
             }
-            if (("gallery").equals(name) || ("photo").equals(name) || ("picture").equals(name)) {
+            if (("gallery").equals(name.toLowerCase()) || ("photo").equals(name.toLowerCase()) || ("picture").equals(name.toLowerCase())) {
                 packagename = pinfo.packageName;
                 //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
                 break;
@@ -400,7 +401,7 @@ public class AppUtils {
         for (int i = 0; i < appList.size(); i++) {
             PackageInfo pinfo = appList.get(i);
             String name = pManager.getApplicationLabel(pinfo.applicationInfo).toString().trim();
-            if (("相机").equals(name) || ("相機").equals(name) || ("照相机").equals(name) || ("照相機").equals(name) || ("照片机").equals(name) || ("Camera").equals(name) || ("camera").equals(name)) {
+            if (("相机").equals(name) || ("相機").equals(name) || ("照相机").equals(name) || ("照相機").equals(name) || ("照片机").equals(name) || ("Camera").equals(name) || ("camera").equals(name.toLowerCase())) {
                 packagename = pinfo.packageName;
                 //Log.e("test", "系统相册:\t" + pinfo.packageName + "\tname:\t" + name);
                 break;
