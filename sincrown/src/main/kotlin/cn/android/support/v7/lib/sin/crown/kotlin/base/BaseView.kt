@@ -1,11 +1,15 @@
 package cn.android.support.v7.lib.sin.crown.kotlin.base
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.LinearInterpolator
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 
 /**
@@ -88,6 +92,15 @@ open class BaseView : View {
         return paint
     }
 
+    fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimatores {
+        return ObjectAnimatores(this).ofFloat(propertyName,repeatCount,duration,*value,AnimatorUpdateListener =AnimatorUpdateListener )
+    }
+
+    fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimatores {
+        return ObjectAnimatores(this).ofInt(propertyName,repeatCount,duration,*value,AnimatorUpdateListener =AnimatorUpdateListener )
+    }
+
+
     companion object {
         /**
          * 画垂直文本
@@ -105,6 +118,75 @@ open class BaseView : View {
                 }
             }
         }
+
+        /**
+         * 传递的View，不管传的是子类还是父类。都行。清测有效。
+         */
+        class ObjectAnimatores(var view: View) {
+            var animatorSet = AnimatorSet()
+            var list = mutableListOf<ObjectAnimator>()
+
+            /**
+             * propertyName 属性名称
+             * repeatCount  动画次数,从0开始。0表示一次，1表示两次。Integer.MAX_VALUE是最大值。
+             * duration  动画时间，单位毫秒。1000表示一秒。
+             * value 可变参数。属性的变化值
+             * AnimatorUpdateListener 动画监听，返回当前变化的属性值。
+             */
+            fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimatores {
+                var objectAnimator = ObjectAnimator.ofFloat(view, propertyName.trim(), *value)
+                if(repeatCount>=Int.MAX_VALUE){
+                    objectAnimator.repeatCount = Int.MAX_VALUE-1//防止Int.MAX_VALUE无效。
+                }else{
+                    objectAnimator.repeatCount = repeatCount
+                }
+                objectAnimator.duration = duration
+                objectAnimator.interpolator=LinearInterpolator()//线性变化，平均变化
+                objectAnimator.addUpdateListener {
+                    var value = it.getAnimatedValue(propertyName.trim())
+                    value?.let {
+                        view.invalidate()//fixme 不停的自我刷新，省去了set里面进去刷新。
+                        AnimatorUpdateListener?.let {
+                            it(value as Float)
+                        }
+                    }
+                }
+                list.add(objectAnimator)
+                return this
+            }
+
+            fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimatores {
+                var objectAnimator = ObjectAnimator.ofInt(view, propertyName.trim(), *value)
+                if(repeatCount>=Int.MAX_VALUE){
+                    objectAnimator.repeatCount = Int.MAX_VALUE-1//防止Int.MAX_VALUE无效。
+                }else{
+                    objectAnimator.repeatCount = repeatCount
+                }
+                objectAnimator.duration = duration
+                objectAnimator.interpolator=LinearInterpolator()//线性变化，平均变化
+                objectAnimator.addUpdateListener {
+                    var value = it.getAnimatedValue(propertyName.trim())
+                    value?.let {
+                        view.invalidate()
+                        AnimatorUpdateListener?.let {
+                            it(value as Int)
+                        }
+                    }
+                }
+                list.add(objectAnimator)
+                return this
+            }
+
+            /**
+             * 动画开始。支持多属性动画。
+             */
+            fun playTogether() {
+                animatorSet.playTogether(*list.toTypedArray())
+                animatorSet.start()
+            }
+
+        }
+
     }
 
 }
