@@ -123,8 +123,6 @@ open class BaseView : View {
          * 传递的View，不管传的是子类还是父类。都行。清测有效。
          */
         class ObjectAnimatores(var view: View) {
-            var animatorSet = AnimatorSet()
-            var list = mutableListOf<ObjectAnimator>()
 
             /**
              * propertyName 属性名称
@@ -151,7 +149,7 @@ open class BaseView : View {
                         }
                     }
                 }
-                list.add(objectAnimator)
+                objectAnimator.start()//fixme 放心吧。多个属性动画可以同时进行。不要使用AnimatorSet，8.0系统不支持。
                 return this
             }
 
@@ -173,16 +171,8 @@ open class BaseView : View {
                         }
                     }
                 }
-                list.add(objectAnimator)
+                objectAnimator.start()
                 return this
-            }
-
-            /**
-             * 动画开始。支持多属性动画。
-             */
-            fun playTogether() {
-                animatorSet.playTogether(*list.toTypedArray())
-                animatorSet.start()
             }
 
         }

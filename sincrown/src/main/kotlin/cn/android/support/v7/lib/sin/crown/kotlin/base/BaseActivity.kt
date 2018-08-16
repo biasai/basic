@@ -1,8 +1,10 @@
 package cn.android.support.v7.lib.sin.crown.kotlin.base
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Window
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.common.Toast
@@ -19,8 +21,21 @@ open class BaseActivity : AppCompatActivity() {
         return this
     }
 
+    open var isPortrait = true//是否竖屏。默认就是竖屏。
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        try {
+            super.onCreate(savedInstanceState)
+            //fixme 在8.0系统的时候，Actvity透明和锁屏（横屏或竖屏）只能存在一个。这个Bug，8.1已经修复了。
+            //fixme 这个Bug在 targetSdkVersion >= 27时，且系统是8.0才会出现 Only fullscreen activities can request orientation
+            if (isPortrait) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);//竖屏
+            } else {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//横屏
+            }
+        } catch (e: Exception) {
+            Log.e("test", "系统框架脑抽筋:\t" + e.message)
+        }
         // 将当前Activity添加到栈中
         BaseActivityManager.getInstance().pushActivity(this)
         requestWindowFeature(Window.FEATURE_NO_TITLE)//无标题栏(setContentView()之前才有效)
