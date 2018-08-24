@@ -25,6 +25,7 @@ class YAxis : BaseView {
     }
 
     var default = -1f//默认值。
+    var strokeLength: Float = default//Y轴实际高度
     var strokeWidth: Float = px.x(1.5f)//边框的宽度
     var strokeColor: Int = Color.parseColor("#bcbec0")//边框颜色
     var strokeDashFloat: FloatArray = floatArrayOf(0f, 0f)//虚线数组,先画实线再画虚线,以此循环
@@ -35,6 +36,12 @@ class YAxis : BaseView {
     var stopY: Float = default//fixme 这个最小
     //起点结束Y坐标(y坐标就一个，如果要画倾斜的线，直接rotation=30f旋转整个控件即可，旋转控件不会有锯齿，直接画斜线会有锯齿。)
     var startAndStopX: Float = default
+    var data: Data? = null//数据
+    fun data(data: Data?): YAxis {
+        this.data = data
+        invalidate()
+        return this
+    }
 
     //原点
     var originX: Float = default
@@ -81,7 +88,7 @@ class YAxis : BaseView {
 
     var unit: Float = default//fixme 单位长度。总长度就是控件本身长度。优先级高于count 。
     /**
-     * fixme 根据单位获取X坐标值。1就等于一个unit的长度。
+     * fixme 根据单位(下标)获取Y坐标值。1就等于一个unit的长度。
      */
     fun getUnitY(unit: Float): Float {
         return startY - this.unit * unit
@@ -104,8 +111,7 @@ class YAxis : BaseView {
     var arrowStrokeWidth: Float = default//箭头边框的宽度
     var arrowStrokeColor: Int = strokeColor//箭头线条的颜色
 
-    var length: Float = default//Y轴实际高度
-
+    var isHidden = false//是否隐藏。true隐藏之后，不会绘制轴，只做计算
     override fun onDraw2(canvas: Canvas, paint: Paint) {
         super.onDraw2(canvas, paint)
         paint.style = Paint.Style.STROKE
@@ -117,8 +123,8 @@ class YAxis : BaseView {
             originY = startY
         }
         if (stopY <= default) {
-            if (length > 0) {
-                stopY = startY - length
+            if (strokeLength > 0) {
+                stopY = startY - strokeLength
             } else {
                 stopY = strokeWidth
             }
@@ -127,23 +133,25 @@ class YAxis : BaseView {
             startAndStopX = width / 2f//默认水平居中
             originX = startAndStopX
         }
-        if (length <= default) {
-            length = startY - stopY
+        if (strokeLength <= default) {
+            strokeLength = startY - stopY
         }
         if (unit <= default && count > 0) {
-            unit = (length / count)
+            unit = (strokeLength / count)
         }
         if (count <= default && unit > 0) {
-            count = (length / unit).toInt()
+            count = (strokeLength / unit).toInt()
         }
         if (count > 0) {
-            unit = (length / count)
+            unit = (strokeLength / (count + 1))
         }
 
         if (arrowLength <= default) {
             arrowLength = strokeWidth * 5//箭头的长度
         }
-
+        if (isHidden) {
+            return
+        }
         if (unit > 0 && count > 0) {
             if (rulerStartX <= default) {
                 rulerStartX = startAndStopX + strokeWidth / 2
@@ -173,8 +181,12 @@ class YAxis : BaseView {
                     }
                 }
                 //画X轴上的单位文字
-                drawUnitText?.let {
-                    it(canvas, startAndStopX, y, i)
+                drawPoint?.let {
+                    var value: Float? = null
+                    data?.let {
+                        value = i * it.unitY
+                    }
+                    it(canvas, getPaint(), startAndStopX, y, i, value)
                 }
             }
             paint.setPathEffect(null)
@@ -192,7 +204,7 @@ class YAxis : BaseView {
         paint.setPathEffect(null)
         //画原点
         drawOrigin?.let {
-            it(canvas, startAndStopX, startY)
+            it(canvas, getPaint(), startAndStopX, startY)
         }
 
         //画终点箭头
@@ -211,30 +223,32 @@ class YAxis : BaseView {
 
         //画终点
         drawEnd?.let {
-            it(canvas, startAndStopX, stopY)
+            it(canvas, getPaint(), startAndStopX, stopY)
         }
 
     }
 
     //画单位文本，返回每个标尺单位的x,y坐标，以及当前下标。从0开始
     //循环从 0 到 count 都会调用。
-    private var drawUnitText: ((canvas: Canvas, x: Float, y: Float, position: Int) -> Unit)? = null
+    //position Y轴上的下标
+    //value Y轴上的数据
+    private var drawPoint: ((canvas: Canvas, paint: Paint, x: Float, y: Float, position: Int, value: Float?) -> Unit)? = null
 
-    fun drawUnitText(drawUnitText: (canvas: Canvas, x: Float, y: Float, position: Int) -> Unit) {
-        this.drawUnitText = drawUnitText
+    fun drawPoint(drawPoint: (canvas: Canvas, paint: Paint, x: Float, y: Float, position: Int, value: Float?) -> Unit) {
+        this.drawPoint = drawPoint
     }
 
     //画原点，返回原点坐标
-    private var drawOrigin: ((canvas: Canvas, x: Float, y: Float) -> Unit)? = null
+    private var drawOrigin: ((canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit)? = null
 
-    fun drawOrigin(drawOrigin: (canvas: Canvas, x: Float, y: Float) -> Unit) {
+    fun drawOrigin(drawOrigin: (canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit) {
         this.drawOrigin = drawOrigin
     }
 
     //画终点，返回终点坐标
-    private var drawEnd: ((canvas: Canvas, x: Float, y: Float) -> Unit)? = null
+    private var drawEnd: ((canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit)? = null
 
-    fun drawEnd(drawEnd: (canvas: Canvas, x: Float, y: Float) -> Unit) {
+    fun drawEnd(drawEnd: (canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit) {
         this.drawEnd = drawEnd
     }
 

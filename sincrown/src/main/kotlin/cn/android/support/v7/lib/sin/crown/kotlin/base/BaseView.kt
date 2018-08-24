@@ -1,16 +1,15 @@
 package cn.android.support.v7.lib.sin.crown.kotlin.base
 
-import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
+import android.view.ViewGroup
+import android.view.animation.*
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
+
 
 /**
  * 无论是自定义view还是普通的layout布局。都不能在async和launch协程里面初始化，要么报错，要么不显示。
@@ -75,33 +74,170 @@ open class BaseView : View {
         }
     }
 
+    var w: Int = 0//获取控件的真实宽度
+        get() {
+            var w = width
+            if (layoutParams.width > w) {
+                w = layoutParams.width
+            }
+            return w
+        }
+
+    var h: Int = 0//获取控件的真实高度
+        get() {
+            var h = height
+            if (layoutParams.height > h) {
+                h = layoutParams.height
+            }
+            return h
+        }
+
+    //获取文本居中Y坐标,height：以这个高度进行对其。即对其高度
+    fun getCenterTextY(paint: Paint): Float {
+        var baseline = (h - (paint.descent() - paint.ascent())) / 2 - paint.ascent()
+        return baseline
+    }
+
+    /**
+     * 获取文本实际居中Y坐标。
+     */
+    fun getTextY(paint: Paint, y: Float): Float {
+        var centerY = getCenterTextY(paint)
+        var sub = h / 2 - centerY
+        var y2 = y - sub
+        return y2
+    }
+
+    /**
+     * 获取文本的高度
+     */
+    fun getTextHeight(paint: Paint): Float {
+        return paint.descent() - paint.ascent()
+    }
+
     /**
      * 获取新画笔
      */
     fun getPaint(): Paint {
-        var paint = Paint()
-        paint.isAntiAlias = true
-        paint.isDither = true
-        paint.color = Color.WHITE
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = px.x(12f)
-        paint.style = Paint.Style.FILL_AND_STROKE
-        paint.strokeWidth = 0f
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.strokeJoin = Paint.Join.ROUND
-        return paint
+        return BaseView.getPaint()
     }
 
+    /**
+     * NormalID 默认背景图片id
+     * PressID 按下背景图片id
+     * SelectID 选中(默认和按下相同)时背景图片id,即选中时状态。需要isSelected=true才有效。
+     */
+    fun selectorDrawable(NormalID: Int, PressID: Int, SelectID: Int = PressID) {
+        SelectorUtils.selectorDrawable(this, NormalID, PressID, SelectID)
+    }
+
+    //图片
+    fun selectorDrawable(NormalBtmap: Bitmap, PressBitmap: Bitmap, SelectBitmap: Bitmap = PressBitmap) {
+        SelectorUtils.selectorDrawable(this, NormalBtmap, PressBitmap, SelectBitmap)
+    }
+
+    //颜色
+    fun selectorColor(NormalColor: Int, PressColor: Int, SelectColor: Int = PressColor) {
+        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+    }
+
+    fun selectorColor(NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
+        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+    }
+
+    //字体颜色
+    fun selectorTextColor(NormalColor: Int, PressColor: Int, SelectColor: Int = PressColor) {
+        SelectorUtils.selectorTextColor(this, NormalColor, PressColor, SelectColor)
+    }
+
+    fun selectorTextColor(NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
+        SelectorUtils.selectorTextColor(this, NormalColor, PressColor, SelectColor)
+    }
+
+    //属性动画
     fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimatores {
-        return ObjectAnimatores(this).ofFloat(propertyName,repeatCount,duration,*value,AnimatorUpdateListener =AnimatorUpdateListener )
+        return ObjectAnimatores(this).ofFloat(propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
     }
 
     fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimatores {
-        return ObjectAnimatores(this).ofInt(propertyName,repeatCount,duration,*value,AnimatorUpdateListener =AnimatorUpdateListener )
+        return ObjectAnimatores(this).ofInt(propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
     }
 
+    /**
+     * 封装位置移动动画
+     * toX,toY相对于父容器的移动的目标坐标点。
+     * durationMillis 动画时间，单位毫秒。
+     * end 回调，动画结束后，返回当前的位置坐标。[位置会实际发生改变]
+     * fixme 注意，如果有多个控件同时开启动画，移动的时候可能会卡顿和抖动现象。多个控件最好不要同时进行动画，太耗性能了。
+     */
+    fun translateAnimation(toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null) {
+        translateAnimation(this, toX, toY, durationMillis, end)
+    }
 
     companion object {
+
+        fun getPaint(): Paint {
+            var paint = Paint()
+            paint.isAntiAlias = true
+            paint.isDither = true
+            paint.color = Color.WHITE
+            paint.textAlign = Paint.Align.CENTER//文本居中
+            paint.textSize = px.x(12f)
+            paint.style = Paint.Style.FILL_AND_STROKE
+            paint.strokeWidth = 0f
+            paint.strokeCap = Paint.Cap.ROUND
+            paint.strokeJoin = Paint.Join.ROUND
+            typeface?.let {
+                if (isGlobal) {
+                    paint.setTypeface(it)//全局应用自定义字体
+                }
+            }
+            return paint
+        }
+
+        fun getPaint(typeface: Typeface?): Paint {
+            var paint = getPaint()
+            paint.typeface = typeface
+            return paint
+        }
+
+        //获取自定义字体画笔
+        fun getPaintTypefaceFromAsset(path: String): Paint {
+            var paint = getPaint()
+            paint.typeface = getTypefaceFromAsset(path)
+            return paint
+        }
+
+        fun getPaintTypefaceFromFile(path: String): Paint {
+            var paint = getPaint()
+            paint.typeface = getTypefaceFromFile(path)
+            return paint
+        }
+
+        var isGlobal = false//是否应用全局字体，默认false
+        fun isGlobal(isGlobal: Boolean = true) {
+            this.isGlobal = isGlobal
+        }
+
+        var typeface: Typeface? = null//自定义全局字体
+        fun typeface(typeface: Typeface?) {
+            this.typeface = typeface
+        }
+
+        /**
+         * path字体路径，来自assets目录 如："fonts/ALIHYAIHEI.TTF"
+         */
+        fun getTypefaceFromAsset(path: String): Typeface {
+            return Typeface.createFromAsset(BaseApplication.getInstance().getResources().getAssets(), path)//字体必须拷贝在assets文件里
+        }
+
+        /**
+         * path字体完整路径，来自存储卡。
+         */
+        fun getTypefaceFromFile(path: String): Typeface {
+            return Typeface.createFromFile(path)//字体必须拷贝在assets文件里
+        }
+
         /**
          * 画垂直文本
          * x,y 是文本的起点位置
@@ -133,13 +269,13 @@ open class BaseView : View {
              */
             fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimatores {
                 var objectAnimator = ObjectAnimator.ofFloat(view, propertyName.trim(), *value)
-                if(repeatCount>=Int.MAX_VALUE){
-                    objectAnimator.repeatCount = Int.MAX_VALUE-1//防止Int.MAX_VALUE无效。
-                }else{
+                if (repeatCount >= Int.MAX_VALUE) {
+                    objectAnimator.repeatCount = Int.MAX_VALUE - 1//防止Int.MAX_VALUE无效。
+                } else {
                     objectAnimator.repeatCount = repeatCount
                 }
                 objectAnimator.duration = duration
-                objectAnimator.interpolator=LinearInterpolator()//线性变化，平均变化
+                objectAnimator.interpolator = LinearInterpolator()//线性变化，平均变化
                 objectAnimator.addUpdateListener {
                     var value = it.getAnimatedValue(propertyName.trim())
                     value?.let {
@@ -155,13 +291,13 @@ open class BaseView : View {
 
             fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimatores {
                 var objectAnimator = ObjectAnimator.ofInt(view, propertyName.trim(), *value)
-                if(repeatCount>=Int.MAX_VALUE){
-                    objectAnimator.repeatCount = Int.MAX_VALUE-1//防止Int.MAX_VALUE无效。
-                }else{
+                if (repeatCount >= Int.MAX_VALUE) {
+                    objectAnimator.repeatCount = Int.MAX_VALUE - 1//防止Int.MAX_VALUE无效。
+                } else {
                     objectAnimator.repeatCount = repeatCount
                 }
                 objectAnimator.duration = duration
-                objectAnimator.interpolator=LinearInterpolator()//线性变化，平均变化
+                objectAnimator.interpolator = LinearInterpolator()//线性变化，平均变化
                 objectAnimator.addUpdateListener {
                     var value = it.getAnimatedValue(propertyName.trim())
                     value?.let {
@@ -175,6 +311,47 @@ open class BaseView : View {
                 return this
             }
 
+        }
+
+        /**
+         * 封装位置移动动画
+         * toX,toY相对于父容器的移动的目标坐标点。
+         * durationMillis 动画时间，单位毫秒。
+         * end 回调，动画结束后，返回当前的位置坐标。[位置会实际发生改变]
+         * fixme 注意，如果有多个控件同时开启动画，移动的时候可能会卡顿和抖动现象。多个控件最好不要同时进行动画，太耗性能了。
+         */
+        fun translateAnimation(view: View, toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null) {
+            var toXDelta = toX - view.x//动画结束的点离当前View X坐标上的差值
+            var toYDelta = toY - view.y//动画开始的点离当前View Y坐标上的差值
+            var translateAnimation = TranslateAnimation(0f, toXDelta, 0f, toYDelta)
+            //动画时长,单位毫秒
+            translateAnimation.setDuration(durationMillis)
+            translateAnimation.interpolator = LinearInterpolator()//平滑，速度平均移动
+            //view位置停留在动画结束的位置
+            translateAnimation.setFillAfter(false)
+            translateAnimation.repeatCount = 0//动画次数。0代表一次。
+            translateAnimation.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationRepeat(p0: Animation?) {}
+                override fun onAnimationEnd(p0: Animation?) {
+                    //fixme 动画结束【手动更改控件实际位置】
+                    //fixme 注意，位置属性不能出现centerInParent(),centerHorizontally()等设置。只能用外补丁来控制位置。
+                    //fixme 除了外补丁，不要出现其他多余的位置属性。不然位置设置无法生效。
+                    view.layoutParams.apply {
+                        if (this is ViewGroup.MarginLayoutParams) {
+                            view.clearAnimation()//动画清除，防止动画结束时抖动
+                            setMargins(toX.toInt(), toY.toInt(), rightMargin, bottomMargin)
+                            view.requestLayout()
+                            end?.let {
+                                it(toX, toY)
+                            }
+                        }
+                    }
+                }
+
+                override fun onAnimationStart(p0: Animation?) {}
+            })
+            //开始动画
+            view.startAnimation(translateAnimation)
         }
 
     }

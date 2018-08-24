@@ -25,6 +25,7 @@ class XAxis : BaseView {
     }
 
     var default = -1f//默认值。
+    var strokeLength: Float = default//X轴实际长度
     var strokeWidth: Float = px.x(1.5f)//边框的宽度
     var strokeColor: Int = Color.parseColor("#bcbec0")//边框颜色
     var strokeDashFloat: FloatArray = floatArrayOf(0f, 0f)//虚线数组,先画实线再画虚线,以此循环
@@ -35,6 +36,12 @@ class XAxis : BaseView {
     var stopX: Float = default
     //起点结束Y坐标(y坐标就一个，如果要画倾斜的线，直接rotation=30f旋转整个控件即可，旋转控件不会有锯齿，直接画斜线会有锯齿。)
     var startAndStopY: Float = default
+    var data: Data? = null//数据
+    fun data(data: Data?): XAxis {
+        this.data = data
+        invalidate()
+        return this
+    }
 
     //原点
     var originX: Float = default
@@ -104,7 +111,7 @@ class XAxis : BaseView {
     var arrowStrokeWidth: Float = default//箭头边框的宽度
     var arrowStrokeColor: Int = strokeColor//箭头线条的颜色
 
-    var length: Float = default//X轴实际长度
+    var isHidden = false//是否隐藏。true隐藏之后，不会绘制轴，只做计算
 
     override fun onDraw2(canvas: Canvas, paint: Paint) {
         super.onDraw2(canvas, paint)
@@ -117,8 +124,8 @@ class XAxis : BaseView {
             originX = startX
         }
         if (stopX <= default) {
-            if (length > 0) {
-                stopX = startX + length
+            if (strokeLength > 0) {
+                stopX = startX + strokeLength
             } else {
                 stopX = width.toFloat() - strokeWidth * 2
             }
@@ -127,23 +134,25 @@ class XAxis : BaseView {
             startAndStopY = height / 2f//默认垂直居中
             originY = startAndStopY
         }
-        if (length <= default) {
-            length = stopX - startX
+        if (strokeLength <= default) {
+            strokeLength = stopX - startX
         }
         if (unit <= default && count > 0) {
-            unit = (length / count)
+            unit = (strokeLength / count)
         }
         if (count <= default && unit > 0) {
-            count = (length / unit).toInt()
+            count = (strokeLength / unit).toInt()
         }
         if (count > 0) {
-            unit = (length / count)
+            unit = (strokeLength / (count + 1))
         }
 
         if (arrowLength <= default) {
             arrowLength = strokeWidth * 5//箭头的长度
         }
-
+        if (isHidden) {
+            return
+        }
         if (unit > 0 && count > 0) {
             if (rulerStartY <= default) {
                 rulerStartY = startAndStopY - strokeWidth / 2
@@ -173,8 +182,10 @@ class XAxis : BaseView {
                     }
                 }
                 //画X轴上的单位文字
-                drawUnitText?.let {
-                    it(canvas, x, startAndStopY, i)
+                drawPoint?.let {
+                    var value = data?.getX(i.toFloat())
+                    //Log.e("test","值:\t"+value+"\t下标:\t"+i.toFloat())
+                    it(canvas, getPaint(), x, startAndStopY, i, value)
                 }
             }
             paint.setPathEffect(null)
@@ -192,7 +203,7 @@ class XAxis : BaseView {
         paint.setPathEffect(null)
         //画原点
         drawOrigin?.let {
-            it(canvas, startX, startAndStopY)
+            it(canvas,getPaint(), startX, startAndStopY)
         }
 
         //画终点箭头
@@ -211,30 +222,32 @@ class XAxis : BaseView {
 
         //画终点
         drawEnd?.let {
-            it(canvas, stopX, startAndStopY)
+            it(canvas, getPaint(),stopX, startAndStopY)
         }
 
     }
 
     //画单位文本，返回每个标尺单位的x,y坐标，以及当前下标。从0开始
     //循环从 0 到 count 都会调用。
-    private var drawUnitText: ((canvas: Canvas, x: Float, y: Float, position: Int) -> Unit)? = null
+    //position X轴上的下标
+    //value,X轴上的数据可能会为空
+    private var drawPoint: ((canvas: Canvas, paint: Paint, x: Float, y: Float, position: Int, value: String?) -> Unit)? = null
 
-    fun drawUnitText(drawUnitText: (canvas: Canvas, x: Float, y: Float, position: Int) -> Unit) {
-        this.drawUnitText = drawUnitText
+    fun drawPoint(drawPoint: (canvas: Canvas, paint: Paint, x: Float, y: Float, position: Int, value: String?) -> Unit) {
+        this.drawPoint = drawPoint
     }
 
     //画原点，返回原点坐标
-    private var drawOrigin: ((canvas: Canvas, x: Float, y: Float) -> Unit)? = null
+    private var drawOrigin: ((canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit)? = null
 
-    fun drawOrigin(drawOrigin: (canvas: Canvas, x: Float, y: Float) -> Unit) {
+    fun drawOrigin(drawOrigin: (canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit) {
         this.drawOrigin = drawOrigin
     }
 
     //画终点，返回终点坐标
-    private var drawEnd: ((canvas: Canvas, x: Float, y: Float) -> Unit)? = null
+    private var drawEnd: ((canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit)? = null
 
-    fun drawEnd(drawEnd: (canvas: Canvas, x: Float, y: Float) -> Unit) {
+    fun drawEnd(drawEnd: (canvas: Canvas, paint: Paint, x: Float, y: Float) -> Unit) {
         this.drawEnd = drawEnd
     }
 
