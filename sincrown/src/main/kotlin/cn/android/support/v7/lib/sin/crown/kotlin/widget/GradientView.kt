@@ -3,18 +3,19 @@ package cn.android.support.v7.lib.sin.crown.kotlin.widget
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 
 /**
  * 颜色渐变视图
  */
-open class GradientView : View {
+open class GradientView : BaseView {
     constructor(context: Context) : super(context) {}
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
     init {
-        setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        setLayerType(View.LAYER_TYPE_HARDWARE, null)//开启硬件加速
     }
 
     //fixme 水平渐变颜色数组值【均匀渐变】
@@ -132,10 +133,9 @@ open class GradientView : View {
         this.right_bottom_color = Color.parseColor(right_bottom_color)
     }
 
-    override fun draw(canvas: Canvas?) {
-        super.draw(canvas)
-        canvas?.apply {
-            var paint = Paint()
+    override fun draw2(canvas: Canvas, paint: Paint) {
+        super.draw2(canvas, paint)
+        canvas.apply {
             paint.isAntiAlias = true
             paint.isDither = true
             paint.style = Paint.Style.FILL_AND_STROKE
@@ -203,49 +203,6 @@ open class GradientView : View {
                 var shader = LinearGradient(0f, 0f, 0f, height.toFloat(), it, null, Shader.TileMode.MIRROR)
                 paint.setShader(shader)
                 drawPaint(paint)
-            }
-            canvas?.let {
-                draw?.let {
-                    var paint = Paint()
-                    paint.isAntiAlias = true
-                    paint.isDither = true
-                    paint.style=Paint.Style.FILL_AND_STROKE
-                    paint.strokeWidth=0f
-                    it(canvas, paint)
-                }
-            }
-        }
-    }
-    //自定义画布，根据需求。自主实现
-    open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
-
-    //自定义，重新绘图
-    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientView {
-        this.draw = draw
-        postInvalidate()//刷新
-        return this
-    }
-
-    //画自己【onDraw在draw()的流程里面，即在它的前面执行】
-    var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
-
-    //画自己
-    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): GradientView {
-        this.onDraw = onDraw
-        postInvalidate()//刷新
-        return this
-    }
-
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        canvas?.let {
-            onDraw?.let {
-                var paint = Paint()
-                paint.isAntiAlias = true
-                paint.isDither = true
-                paint.style=Paint.Style.FILL_AND_STROKE
-                paint.strokeWidth=0f
-                it(canvas, paint)
             }
         }
     }
