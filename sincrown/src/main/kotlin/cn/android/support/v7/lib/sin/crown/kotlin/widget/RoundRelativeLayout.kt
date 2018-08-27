@@ -75,15 +75,16 @@ open class RoundRelativeLayout : RelativeLayout {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
-        var b = super.dispatchTouchEvent(event)
         if (bindView != null) {
             event?.let {
                 when (it.action and MotionEvent.ACTION_MASK) {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
-                        bindView?.isPressed = isPressed//按下状态
+                        bindView?.isPressed = true//按下状态
+                        isPressed=true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                         bindView?.isPressed = false
+                        isPressed=false
                     }
                     MotionEvent.ACTION_CANCEL -> {
                         //其他异常
@@ -92,7 +93,7 @@ open class RoundRelativeLayout : RelativeLayout {
                 }
             }
         }
-        return b
+        return super.dispatchTouchEvent(event)
     }
 
     var all_radius: Float = 0F//默认，所有圆角的角度

@@ -7,6 +7,8 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.util.DisplayMetrics
 import android.view.View
+import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN
 
 /**
  * Created by 彭治铭 on 2018/7/21.
@@ -260,7 +262,7 @@ open class BasePx {
      *
      * @return
      */
-    private fun statusHeight(context: Application? = null): Int {
+    public fun statusHeight(context: Application? = null): Int {
         if (statusHeight <= 0) {
             try {
                 val clazz = Class.forName("com.android.internal.R\$dimen")
@@ -274,6 +276,18 @@ open class BasePx {
 
         }
         return statusHeight
+    }
+
+    /**
+     * 判断当前Activity是否有状态栏
+     * true 有状态栏，false没有状态栏
+     */
+    public fun isStatusBarVisible(activity: Activity): Boolean {
+        if (activity.getWindow().getAttributes().flags and WindowManager.LayoutParams.FLAG_FULLSCREEN === 0) {
+            return true//有状态栏
+        } else {
+            return false//没有有状态栏
+        }
     }
 
     //通过反射获取ActivityThread【隐藏类】

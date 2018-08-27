@@ -72,15 +72,16 @@ open class BaseView : View {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
-        var b = super.dispatchTouchEvent(event)
         if (bindView != null) {
             event?.let {
                 when (it.action and MotionEvent.ACTION_MASK) {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
-                        bindView?.isPressed = isPressed//按下状态
+                        bindView?.isPressed = true//按下状态
+                        isPressed=true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                         bindView?.isPressed = false
+                        isPressed=false
                     }
                     MotionEvent.ACTION_CANCEL -> {
                         //其他异常
@@ -89,7 +90,7 @@ open class BaseView : View {
                 }
             }
         }
-        return b
+        return super.dispatchTouchEvent(event)
     }
 
     //fixme 自定义画布，根据需求。自主实现
