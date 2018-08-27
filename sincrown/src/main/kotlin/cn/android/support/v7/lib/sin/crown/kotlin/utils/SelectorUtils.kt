@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.StateListDrawable
 import android.view.View
 import android.widget.CheckBox
@@ -26,20 +27,37 @@ object SelectorUtils {
      * PressID 按下背景图片id
      * SelectID 选中(默认和按下相同)时背景图片id
      */
-    fun selectorDrawable(view: View, NormalID: Int, PressID: Int, SelectID: Int = PressID) {
+    fun selectorDrawable(view: View, NormalID: Int?, PressID: Int?, SelectID: Int? = PressID) {
         val drawable = StateListDrawable()
-        var drawableNormal = px.context()?.resources?.getDrawable(NormalID)
-        var drawablePress = px.context()?.resources?.getDrawable(PressID)
-        var drawableSelect = px.context()?.resources?.getDrawable(SelectID)
+        var drawableNormal: Drawable? = null
+        NormalID?.let {
+            drawableNormal == px.context()?.resources?.getDrawable(NormalID)
+        }
+        var drawablePress: Drawable? = null
+        PressID?.let {
+            drawablePress = px.context()?.resources?.getDrawable(PressID)
+        }
+        var drawableSelect: Drawable? = null
+        SelectID?.let {
+            drawableSelect = px.context()?.resources?.getDrawable(SelectID)
+        }
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下
-        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
+        drawablePress?.let {
+            drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
+        }
         //选中
-        drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
-        drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
+        drawableSelect?.let {
+            drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
+        }
+        drawableSelect?.let {
+            drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
+        }
         //未选中 + 未按下 (也就是一般状态)
-        drawable.addState(intArrayOf(-android.R.attr.state_checked), drawableNormal)
+        drawableNormal?.let {
+            drawable.addState(intArrayOf(-android.R.attr.state_checked), drawableNormal)
+        }
         if (view is CheckBox) {//多选框
             view.buttonDrawable = drawable
         } else if (view is RadioButton) {//单选框
@@ -54,21 +72,35 @@ object SelectorUtils {
      * PressBitmap 按下时背景位图
      * SelectBitmap 选中(默认和按下相同)时背景位图
      */
-    fun selectorDrawable(view: View, NormalBtmap: Bitmap, PressBitmap: Bitmap, SelectBitmap: Bitmap = PressBitmap) {
+    fun selectorDrawable(view: View, NormalBtmap: Bitmap?, PressBitmap: Bitmap?, SelectBitmap: Bitmap? = PressBitmap) {
         val drawable = StateListDrawable()
-        var drawableNormal = BitmapDrawable(NormalBtmap)
-        var drawablePress = BitmapDrawable(PressBitmap)
-        var drawableSelect = BitmapDrawable(SelectBitmap)
+        var drawableNormal: BitmapDrawable? = null
+        NormalBtmap?.let {
+            drawableNormal = BitmapDrawable(NormalBtmap)
+        }
+        var drawablePress: BitmapDrawable? = null
+        PressBitmap?.let {
+            drawablePress = BitmapDrawable(PressBitmap)
+        }
+        var drawableSelect: BitmapDrawable? = null
+        SelectBitmap?.let {
+            drawableSelect = BitmapDrawable(SelectBitmap)
+        }
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下
-        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
+        drawablePress?.let {
+            drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
+        }
         //选中
-        drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
-        drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
+        drawableSelect?.let {
+            drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
+            drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
+        }
         //未选中 + 未按下 (也就是一般状态)
-        drawable.addState(intArrayOf(-android.R.attr.state_checked), drawableNormal)
-
+        drawableNormal?.let {
+            drawable.addState(intArrayOf(-android.R.attr.state_checked), drawableNormal)
+        }
         if (view is CheckBox) {//多选框
             view.buttonDrawable = drawable
         } else if (view is RadioButton) {//单选框
@@ -83,20 +115,35 @@ object SelectorUtils {
      * PressColor  按下正常背景颜色值
      * SelectColor 选中(默认和按下相同)背景颜色值
      */
-    fun selectorColor(view: View, NormalColor: Int, PressColor: Int, SelectColor: Int = PressColor) {
+    fun selectorColor(view: View, NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor) {
         val drawable = StateListDrawable()
-        var drawableNormal = ColorDrawable(NormalColor)
-        var drawablePress = ColorDrawable(PressColor)
-        var drawableSelect = ColorDrawable(SelectColor)
+        var drawableNormal: ColorDrawable? = null
+        NormalColor?.let {
+            drawableNormal = ColorDrawable(NormalColor)
+        }
+        var drawablePress: ColorDrawable? = null
+        PressColor?.let {
+            drawablePress = ColorDrawable(PressColor)
+        }
+        var drawableSelect: ColorDrawable? = null
+        SelectColor?.let {
+            drawableSelect = ColorDrawable(SelectColor)
+        }
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下
-        drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
+        drawablePress?.let {
+            drawable.addState(intArrayOf(android.R.attr.state_pressed), drawablePress)
+        }
         //选中
-        drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
-        drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
+        drawableSelect?.let {
+            drawable.addState(intArrayOf(android.R.attr.state_checked), drawableSelect)
+            drawable.addState(intArrayOf(android.R.attr.state_selected), drawableSelect)
+        }
         //未选中 + 未按下 (也就是一般状态)
-        drawable.addState(intArrayOf(-android.R.attr.state_checked), drawableNormal)
+        drawableNormal?.let {
+            drawable.addState(intArrayOf(-android.R.attr.state_checked), drawableNormal)
+        }
         if (view is CheckBox) {//多选框
             view.buttonDrawable = drawable
         } else if (view is RadioButton) {//单选框
@@ -111,11 +158,20 @@ object SelectorUtils {
      * PressColor  按下背景颜色值
      * SelectColor 选中(默认和按下时相同)背景颜色值
      */
-    fun selectorColor(view: View, NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
+    fun selectorColor(view: View, NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor) {
         val drawable = StateListDrawable()
-        var drawableNormal = ColorDrawable(Color.parseColor(NormalColor))
-        var drawablePress = ColorDrawable(Color.parseColor(PressColor))
-        var drawableSelect = ColorDrawable(Color.parseColor(SelectColor))
+        var drawableNormal: ColorDrawable? = null
+        NormalColor?.let {
+            drawableNormal = ColorDrawable(Color.parseColor(NormalColor))
+        }
+        var drawablePress: ColorDrawable? = null
+        PressColor?.let {
+            drawablePress = ColorDrawable(Color.parseColor(PressColor))
+        }
+        var drawableSelect: ColorDrawable? = null
+        SelectColor?.let {
+            drawableSelect = ColorDrawable(Color.parseColor(SelectColor))
+        }
         //fixme - 表示fasle
         view.isClickable = true//具体点击能力
         //按下

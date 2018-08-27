@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.widget.TextView
 import android.graphics.RectF
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
@@ -30,6 +31,69 @@ class RoundTextView : TextView {
             right_top = typedArray?.getDimension(R.styleable.RoundCornersRect_radian_right_top, all_radius)
             right_bottom = typedArray?.getDimension(R.styleable.RoundCornersRect_radian_right_bottom, all_radius)
         }
+    }
+
+    var bindView: View? = null//状态绑定的View
+        set(value) {
+            field = value
+            if (value != null) {
+                if (value is BaseView) {
+                    if(value.bindView==null){
+                        value.bindView = this//相互绑定
+                    }
+                } else if (value is RoundTextView) {
+                    if(value.bindView==null){
+                        value.bindView = this//相互绑定
+                    }
+                }else if (value is RoundRelativeLayout) {
+                    if(value.bindView==null){
+                        value.bindView = this//相互绑定
+                    }
+                }
+            }
+        }
+
+    fun bindView(bindView: View?) {
+        this.bindView = bindView
+    }
+
+    //状态同步
+    fun bindSycn() {
+        bindView?.let {
+            it.isSelected = isSelected
+            it.isPressed = isPressed
+        }
+    }
+
+    //重写选中状态。
+    override fun setSelected(selected: Boolean) {
+        super.setSelected(selected)
+        bindView?.let {
+            if(it.isSelected!=isSelected){
+                it?.isSelected = isSelected//选中状态
+            }
+        }
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
+        var b = super.dispatchTouchEvent(event)
+        if (bindView != null) {
+            event?.let {
+                when (it.action and MotionEvent.ACTION_MASK) {
+                    MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
+                        bindView?.isPressed = isPressed//按下状态
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                        bindView?.isPressed = false
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        //其他异常
+                        bindView?.isPressed = false
+                    }
+                }
+            }
+        }
+        return b
     }
 
     var all_radius: Float = 0F//默认，所有圆角的角度
@@ -125,18 +189,18 @@ class RoundTextView : TextView {
                 //边框颜色渐变
                 var linearGradient: LinearGradient? = null
                 if (gradientColors != null) {
-                    if(gradientOritation==ORIENTATION_HORIZONTAL){
+                    if (gradientOritation == ORIENTATION_HORIZONTAL) {
                         //水平渐变
                         linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, gradientColors, null, Shader.TileMode.CLAMP)
-                    }else{
+                    } else {
                         //垂直渐变
                         linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), gradientColors, null, Shader.TileMode.CLAMP)
                     }
                 } else {
                     if (!(gradientStartColor == Color.TRANSPARENT && gradientEndColor == Color.TRANSPARENT)) {
-                        if(gradientOritation==ORIENTATION_HORIZONTAL){
+                        if (gradientOritation == ORIENTATION_HORIZONTAL) {
                             linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, gradientStartColor, gradientEndColor, Shader.TileMode.CLAMP)
-                        }else{
+                        } else {
                             linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), gradientStartColor, gradientEndColor, Shader.TileMode.CLAMP)
                         }
                     }
@@ -211,21 +275,21 @@ class RoundTextView : TextView {
      * PressID 按下背景图片id
      * SelectID 选中(默认和按下相同)时背景图片id,即选中时状态。需要isSelected=true才有效。
      */
-    fun selectorDrawable(NormalID: Int, PressID: Int, SelectID: Int = PressID) {
+    fun selectorDrawable(NormalID: Int?, PressID: Int?, SelectID: Int? = PressID) {
         SelectorUtils.selectorDrawable(this, NormalID, PressID, SelectID)
     }
 
     //图片
-    fun selectorDrawable(NormalBtmap: Bitmap, PressBitmap: Bitmap, SelectBitmap: Bitmap = PressBitmap) {
+    fun selectorDrawable(NormalBtmap: Bitmap?, PressBitmap: Bitmap?, SelectBitmap: Bitmap? = PressBitmap) {
         SelectorUtils.selectorDrawable(this, NormalBtmap, PressBitmap, SelectBitmap)
     }
 
     //颜色
-    fun selectorColor(NormalColor: Int, PressColor: Int, SelectColor: Int = PressColor) {
+    fun selectorColor(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor) {
         SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
     }
 
-    fun selectorColor(NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
+    fun selectorColor(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor) {
         SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
     }
 

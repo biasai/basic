@@ -4,11 +4,14 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.*
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
+import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundRelativeLayout
+import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundTextView
 
 
 /**
@@ -26,6 +29,68 @@ open class BaseView : View {
 
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
 
+    var bindView: View? = null//状态绑定的View
+        set(value) {
+            field = value
+            if (value != null) {
+                if (value is BaseView) {
+                    if(value.bindView==null){
+                        value.bindView = this//相互绑定
+                    }
+                } else if (value is RoundTextView) {
+                    if(value.bindView==null){
+                        value.bindView = this//相互绑定
+                    }
+                } else if (value is RoundRelativeLayout) {
+                    if(value.bindView==null){
+                        value.bindView = this//相互绑定
+                    }
+                }
+            }
+        }
+
+    fun bindView(bindView: View?) {
+        this.bindView = bindView
+    }
+
+    //状态同步
+    fun bindSycn() {
+        bindView?.let {
+            it.isSelected = isSelected
+            it.isPressed = isPressed
+        }
+    }
+
+    //重写选中状态。
+    override fun setSelected(selected: Boolean) {
+        super.setSelected(selected)
+        bindView?.let {
+            if(it.isSelected!=isSelected){
+                it?.isSelected = isSelected//选中状态
+            }
+        }
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
+        var b = super.dispatchTouchEvent(event)
+        if (bindView != null) {
+            event?.let {
+                when (it.action and MotionEvent.ACTION_MASK) {
+                    MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
+                        bindView?.isPressed = isPressed//按下状态
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                        bindView?.isPressed = false
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        //其他异常
+                        bindView?.isPressed = false
+                    }
+                }
+            }
+        }
+        return b
+    }
 
     //fixme 自定义画布，根据需求。自主实现
     protected open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
@@ -127,21 +192,21 @@ open class BaseView : View {
      * PressID 按下背景图片id
      * SelectID 选中(默认和按下相同)时背景图片id,即选中时状态。需要isSelected=true才有效。
      */
-    fun selectorDrawable(NormalID: Int, PressID: Int, SelectID: Int = PressID) {
+    fun selectorDrawable(NormalID: Int?, PressID: Int?, SelectID: Int? = PressID) {
         SelectorUtils.selectorDrawable(this, NormalID, PressID, SelectID)
     }
 
     //图片
-    fun selectorDrawable(NormalBtmap: Bitmap, PressBitmap: Bitmap, SelectBitmap: Bitmap = PressBitmap) {
+    fun selectorDrawable(NormalBtmap: Bitmap?, PressBitmap: Bitmap?, SelectBitmap: Bitmap? = PressBitmap) {
         SelectorUtils.selectorDrawable(this, NormalBtmap, PressBitmap, SelectBitmap)
     }
 
     //颜色
-    fun selectorColor(NormalColor: Int, PressColor: Int, SelectColor: Int = PressColor) {
+    fun selectorColor(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor) {
         SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
     }
 
-    fun selectorColor(NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
+    fun selectorColor(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor) {
         SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
     }
 
