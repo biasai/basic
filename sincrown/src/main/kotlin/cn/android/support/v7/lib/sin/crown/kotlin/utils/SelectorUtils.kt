@@ -31,7 +31,7 @@ object SelectorUtils {
         val drawable = StateListDrawable()
         var drawableNormal: Drawable? = null
         NormalID?.let {
-            drawableNormal == px.context()?.resources?.getDrawable(NormalID)
+            drawableNormal = px.context()?.resources?.getDrawable(NormalID)
         }
         var drawablePress: Drawable? = null
         PressID?.let {
