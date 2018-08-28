@@ -1,5 +1,6 @@
 package cn.android.support.v7.lib.sin.crown.kotlin.base
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -16,9 +17,14 @@ import cn.android.support.v7.lib.sin.crown.kotlin.utils.PictureUtils
  */
 open class BaseActivity : AppCompatActivity() {
 
-    //这里不使用activity变量(防止累成泄露)，就直接使用get方法获取。
+    var activity: Activity? = null
     fun getActivity(): BaseActivity {
         return this
+    }
+
+    override fun onDestroy() {
+        activity = null//防止内存泄露
+        super.onDestroy()
     }
 
     open var isPortrait = true//是否竖屏。默认就是竖屏。
