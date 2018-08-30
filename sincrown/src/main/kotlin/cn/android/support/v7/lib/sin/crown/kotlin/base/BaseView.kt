@@ -7,12 +7,13 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.*
+import android.view.animation.Animation
+import android.view.animation.LinearInterpolator
+import android.view.animation.TranslateAnimation
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundRelativeLayout
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundTextView
-
 
 /**
  * 无论是自定义view还是普通的layout布局。都不能在async和launch协程里面初始化，要么报错，要么不显示。
@@ -27,22 +28,24 @@ open class BaseView : View {
         }
     }
 
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs){
+        setLayerType(View.LAYER_TYPE_HARDWARE, null)//默认硬件加速
+    }
 
     var bindView: View? = null//状态绑定的View
         set(value) {
             field = value
             if (value != null) {
                 if (value is BaseView) {
-                    if(value.bindView==null){
+                    if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
                 } else if (value is RoundTextView) {
-                    if(value.bindView==null){
+                    if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
                 } else if (value is RoundRelativeLayout) {
-                    if(value.bindView==null){
+                    if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
                 }
@@ -65,7 +68,7 @@ open class BaseView : View {
     override fun setSelected(selected: Boolean) {
         super.setSelected(selected)
         bindView?.let {
-            if(it.isSelected!=isSelected){
+            if (it.isSelected != isSelected) {
                 it?.isSelected = isSelected//选中状态
             }
         }
@@ -77,11 +80,11 @@ open class BaseView : View {
                 when (it.action and MotionEvent.ACTION_MASK) {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
                         bindView?.isPressed = true//按下状态
-                        isPressed=true
+                        isPressed = true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                         bindView?.isPressed = false
-                        isPressed=false
+                        isPressed = false
                     }
                     MotionEvent.ACTION_CANCEL -> {
                         //其他异常
@@ -220,13 +223,30 @@ open class BaseView : View {
         SelectorUtils.selectorTextColor(this, NormalColor, PressColor, SelectColor)
     }
 
-    //属性动画
-    fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimatores {
-        return ObjectAnimatores(this).ofFloat(propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+    //属性动画集合
+    var objectAnimates = arrayListOf<ObjectAnimator?>()
+
+    //停止所有属性动画
+    fun stopAllObjAnim() {
+        for (i in 0 until objectAnimates.size) {
+            objectAnimates[i]?.let {
+                it.end()
+            }
+        }
+        objectAnimates.clear()//清除所有动画
     }
 
-    fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimatores {
-        return ObjectAnimatores(this).ofInt(propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+    //属性动画
+    fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
+        var objectAnimator = ofFloat(this, propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+        objectAnimates.add(objectAnimator)
+        return objectAnimator
+    }
+
+    fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimator {
+        var objectAnimator = ofInt(this, propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+        objectAnimates.add(objectAnimator)
+        return objectAnimator
     }
 
     /**
@@ -236,8 +256,8 @@ open class BaseView : View {
      * end 回调，动画结束后，返回当前的位置坐标。[位置会实际发生改变]
      * fixme 注意，如果有多个控件同时开启动画，移动的时候可能会卡顿和抖动现象。多个控件最好不要同时进行动画，太耗性能了。
      */
-    fun translateAnimation(toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null) {
-        translateAnimation(this, toX, toY, durationMillis, end)
+    fun translateAnimation(toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null): TranslateAnimation {
+        return translateAnimation(this, toX, toY, durationMillis, end)
     }
 
     companion object {
@@ -322,61 +342,54 @@ open class BaseView : View {
         }
 
         /**
-         * 传递的View，不管传的是子类还是父类。都行。清测有效。
+         * propertyName 属性名称
+         * repeatCount  动画次数,从0开始。0表示一次，1表示两次。Integer.MAX_VALUE是最大值。
+         * duration  动画时间，单位毫秒。1000表示一秒。
+         * value 可变参数。属性的变化值
+         * AnimatorUpdateListener 动画监听，返回当前变化的属性值。
          */
-        class ObjectAnimatores(var view: View) {
-
-            /**
-             * propertyName 属性名称
-             * repeatCount  动画次数,从0开始。0表示一次，1表示两次。Integer.MAX_VALUE是最大值。
-             * duration  动画时间，单位毫秒。1000表示一秒。
-             * value 可变参数。属性的变化值
-             * AnimatorUpdateListener 动画监听，返回当前变化的属性值。
-             */
-            fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimatores {
-                var objectAnimator = ObjectAnimator.ofFloat(view, propertyName.trim(), *value)
-                if (repeatCount >= Int.MAX_VALUE) {
-                    objectAnimator.repeatCount = Int.MAX_VALUE - 1//防止Int.MAX_VALUE无效。
-                } else {
-                    objectAnimator.repeatCount = repeatCount
-                }
-                objectAnimator.duration = duration
-                objectAnimator.interpolator = LinearInterpolator()//线性变化，平均变化
-                objectAnimator.addUpdateListener {
-                    var value = it.getAnimatedValue(propertyName.trim())
-                    value?.let {
-                        view.invalidate()//fixme 不停的自我刷新，省去了set里面进去刷新。
-                        AnimatorUpdateListener?.let {
-                            it(value as Float)
-                        }
+        fun ofFloat(view: View, propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
+            var objectAnimator = ObjectAnimator.ofFloat(view, propertyName.trim(), *value)
+            if (repeatCount >= Int.MAX_VALUE) {
+                objectAnimator.repeatCount = Int.MAX_VALUE - 1//防止Int.MAX_VALUE无效。
+            } else {
+                objectAnimator.repeatCount = repeatCount
+            }
+            objectAnimator.duration = duration
+            objectAnimator.interpolator = LinearInterpolator()//线性变化，平均变化
+            objectAnimator.addUpdateListener {
+                var value = it.getAnimatedValue(propertyName.trim())
+                value?.let {
+                    view.invalidate()//fixme 不停的自我刷新，省去了set里面进去刷新。
+                    AnimatorUpdateListener?.let {
+                        it(value as Float)
                     }
                 }
-                objectAnimator.start()//fixme 放心吧。多个属性动画可以同时进行。不要使用AnimatorSet，8.0系统不支持。
-                return this
             }
+            objectAnimator.start()//fixme 放心吧。多个属性动画可以同时进行。不要使用AnimatorSet，8.0系统不支持。
+            return objectAnimator
+        }
 
-            fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimatores {
-                var objectAnimator = ObjectAnimator.ofInt(view, propertyName.trim(), *value)
-                if (repeatCount >= Int.MAX_VALUE) {
-                    objectAnimator.repeatCount = Int.MAX_VALUE - 1//防止Int.MAX_VALUE无效。
-                } else {
-                    objectAnimator.repeatCount = repeatCount
-                }
-                objectAnimator.duration = duration
-                objectAnimator.interpolator = LinearInterpolator()//线性变化，平均变化
-                objectAnimator.addUpdateListener {
-                    var value = it.getAnimatedValue(propertyName.trim())
-                    value?.let {
-                        view.invalidate()
-                        AnimatorUpdateListener?.let {
-                            it(value as Int)
-                        }
+        fun ofInt(view: View, propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimator {
+            var objectAnimator = ObjectAnimator.ofInt(view, propertyName.trim(), *value)
+            if (repeatCount >= Int.MAX_VALUE) {
+                objectAnimator.repeatCount = Int.MAX_VALUE - 1//防止Int.MAX_VALUE无效。
+            } else {
+                objectAnimator.repeatCount = repeatCount
+            }
+            objectAnimator.duration = duration
+            objectAnimator.interpolator = LinearInterpolator()//线性变化，平均变化
+            objectAnimator.addUpdateListener {
+                var value = it.getAnimatedValue(propertyName.trim())
+                value?.let {
+                    view.invalidate()
+                    AnimatorUpdateListener?.let {
+                        it(value as Int)
                     }
                 }
-                objectAnimator.start()
-                return this
             }
-
+            objectAnimator.start()
+            return objectAnimator
         }
 
         /**
@@ -386,7 +399,7 @@ open class BaseView : View {
          * end 回调，动画结束后，返回当前的位置坐标。[位置会实际发生改变]
          * fixme 注意，如果有多个控件同时开启动画，移动的时候可能会卡顿和抖动现象。多个控件最好不要同时进行动画，太耗性能了。
          */
-        fun translateAnimation(view: View, toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null) {
+        fun translateAnimation(view: View, toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null): TranslateAnimation {
             var toXDelta = toX - view.x//动画结束的点离当前View X坐标上的差值
             var toYDelta = toY - view.y//动画开始的点离当前View Y坐标上的差值
             var translateAnimation = TranslateAnimation(0f, toXDelta, 0f, toYDelta)
@@ -418,6 +431,7 @@ open class BaseView : View {
             })
             //开始动画
             view.startAnimation(translateAnimation)
+            return translateAnimation
         }
 
     }
