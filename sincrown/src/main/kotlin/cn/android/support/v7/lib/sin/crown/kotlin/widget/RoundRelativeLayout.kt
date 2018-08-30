@@ -1,5 +1,6 @@
 package cn.android.support.v7.lib.sin.crown.kotlin.widget
 
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -7,6 +8,7 @@ import android.graphics.RectF
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.TranslateAnimation
 import android.widget.RelativeLayout
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
@@ -293,13 +295,30 @@ open class RoundRelativeLayout : RelativeLayout {
         SelectorUtils.selectorTextColor(this, NormalColor, PressColor, SelectColor)
     }
 
-    //属性动画
-    fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): BaseView.Companion.ObjectAnimatores {
-        return BaseView.Companion.ObjectAnimatores(this).ofFloat(propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+    //属性动画集合
+    var objectAnimates = arrayListOf<ObjectAnimator?>()
+
+    //停止所有属性动画
+    fun stopAllObjAnim() {
+        for (i in 0 until objectAnimates.size) {
+            objectAnimates[i]?.let {
+                it.end()
+            }
+        }
+        objectAnimates.clear()//清除所有动画
     }
 
-    fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): BaseView.Companion.ObjectAnimatores {
-        return BaseView.Companion.ObjectAnimatores(this).ofInt(propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+    //属性动画
+    fun ofFloat(propertyName: String, repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
+        var objectAnimator = BaseView.ofFloat(this, propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+        objectAnimates.add(objectAnimator)
+        return objectAnimator
+    }
+
+    fun ofInt(propertyName: String, repeatCount: Int, duration: Long, vararg value: Int, AnimatorUpdateListener: ((values: Int) -> Unit)? = null): ObjectAnimator {
+        var objectAnimator = BaseView.ofInt(this, propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+        objectAnimates.add(objectAnimator)
+        return objectAnimator
     }
 
     /**
@@ -309,8 +328,8 @@ open class RoundRelativeLayout : RelativeLayout {
      * end 回调，动画结束后，返回当前的位置坐标。[位置会实际发生改变]
      * fixme 注意，如果有多个控件同时开启动画，移动的时候可能会卡顿和抖动现象。多个控件最好不要同时进行动画，太耗性能了。
      */
-    fun translateAnimation(toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null) {
-        BaseView.translateAnimation(this, toX, toY, durationMillis, end)
+    fun translateAnimation(toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null): TranslateAnimation {
+        return BaseView.translateAnimation(this, toX, toY, durationMillis, end)
     }
 
 
