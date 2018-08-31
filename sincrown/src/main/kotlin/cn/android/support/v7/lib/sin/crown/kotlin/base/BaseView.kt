@@ -75,6 +75,8 @@ open class BaseView : View {
         }
     }
 
+    //fixme selectorDrawable(R.mipmap.p_dont_agree,null, R.mipmap.p_agree)
+    //fixme 注意，如果要用选中状态，触摸状态最好设置为null空。不会有卡顿冲突。
     //重写选中状态。
     override fun setSelected(selected: Boolean) {
         super.setSelected(selected)
@@ -86,6 +88,8 @@ open class BaseView : View {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
+        var b = super.dispatchTouchEvent(event)
+        //防止点击事件冲突。所以。一定要放到super()后面。
         if (bindView != null) {
             event?.let {
                 when (it.action and MotionEvent.ACTION_MASK) {
@@ -104,7 +108,7 @@ open class BaseView : View {
                 }
             }
         }
-        return super.dispatchTouchEvent(event)
+        return b
     }
 
     //fixme 自定义画布，根据需求。自主实现
