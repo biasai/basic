@@ -82,7 +82,7 @@ class FrameView : BaseView {
 
     override fun draw2(canvas: Canvas, paint: Paint) {
         super.draw2(canvas, paint)
-        if (bitmaps.size > position) {
+        if (bitmaps.size > position && position >= 0) {
             var bitmap = bitmaps[position]
             bitmap?.let {
                 if (!it.isRecycled) {
@@ -101,7 +101,7 @@ class FrameView : BaseView {
      */
     fun startOrderAnime(duration: Long = 400, repeatCount: Int = 0, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
         var end = bitmaps.size
-        if (end > 0 && position > 0) {
+        if (end > 0) {
             end -= 1
             isOrder = true
             var pos = position
@@ -125,7 +125,7 @@ class FrameView : BaseView {
      */
     fun startReverseAnime(duration: Long = 400, repeatCount: Int = 0, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
         var end = bitmaps.size
-        if (end > 0 && position > 0) {
+        if (end > 0) {
             end -= 1
             isOrder = false
             var pos = position
