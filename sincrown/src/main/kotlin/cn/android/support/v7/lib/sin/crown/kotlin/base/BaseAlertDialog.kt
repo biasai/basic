@@ -19,7 +19,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.R
  * 使用說明：BaseAlertDialog(this).setContentView(R.layout.dialog_photo).builder()
  * Created by 彭治铭 on 2018/4/27.
  */
-class BaseAlertDialog(activity: Activity) : BaseDialog(activity, R.layout.crown_dialog_base_alert) {
+class BaseAlertDialog(activity: Activity, isStatus: Boolean = true, isTransparent: Boolean = true) : BaseDialog(activity, R.layout.crown_dialog_base_alert,isStatus,isTransparent) {
 
 
     var view: View? = null //传入的布局

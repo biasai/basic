@@ -3,6 +3,7 @@ package cn.android.support.v7.lib.sin.crown.kotlin.base
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -16,7 +17,6 @@ import cn.android.support.v7.lib.sin.crown.kotlin.utils.PictureUtils
  * Created by 彭治铭 on 2018/6/24.
  */
 open class BaseActivity : AppCompatActivity() {
-
     var activity: Activity? = null
     fun getActivity(): BaseActivity {
         return this
@@ -31,17 +31,24 @@ open class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try {
+            activity = this
             super.onCreate(savedInstanceState)
-            //fixme 在8.0系统的时候，Actvity透明和锁屏（横屏或竖屏）只能存在一个。这个Bug，8.1已经修复了。
+            //fixme 在8.0(api 26)系统的时候，Actvity透明和锁屏（横屏或竖屏）只能存在一个。这个Bug，8.1已经修复了。
             //fixme 这个Bug在 targetSdkVersion >= 27时，且系统是8.0才会出现 Only fullscreen activities can request orientation
-            if (isPortrait) {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);//竖屏
+            if (Build.VERSION.SDK_INT == 26 && getApplicationInfo().targetSdkVersion >= 26) {
+                //这个情况会崩溃，不能横竖屏。是系统Bug
             } else {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//横屏
+                if (isPortrait) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)//竖屏
+                } else {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)//横屏
+
+                }
             }
         } catch (e: Exception) {
             Log.e("test", "系统框架脑抽筋:\t" + e.message)
         }
+
         // 将当前Activity添加到栈中
         BaseActivityManager.getInstance().pushActivity(this)
         requestWindowFeature(Window.FEATURE_NO_TITLE)//无标题栏(setContentView()之前才有效)
@@ -93,6 +100,7 @@ open class BaseActivity : AppCompatActivity() {
     private var exitTime: Long = 0
     //open var exitInfo = "再按一次退出"//退出提示信息[子类可以重写]
     open var exitInfo = "别点了，再点我就要走了"
+
     //监听返回键
     override fun onBackPressed() {
         if (isExit()) {

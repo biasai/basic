@@ -96,14 +96,19 @@ class FrameView : BaseView {
     /**
      * 开始帧动画(顺序)
      * duration时间 单位毫秒
+     * repeatCount 动画次数，默认一次。0就代表一次。1是两次
      * callback 回调，每一帧都回调，返回当前图片的下标
      */
-    fun startOrderAnime(duration: Long = 400, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
+    fun startOrderAnime(duration: Long = 400, repeatCount: Int = 0, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
         var end = bitmaps.size
-        if (end > 0) {
+        if (end > 0 && position > 0) {
             end -= 1
             isOrder = true
-            return ofInt("position", 0, duration, position, end) {
+            var pos = position
+            if (repeatCount > 0) {
+                pos = 0//动画两次以上，防止错乱
+            }
+            return ofInt("position", repeatCount, duration, pos, end) {
                 if (callback != null) {
                     callback(it)
                 }
@@ -115,12 +120,19 @@ class FrameView : BaseView {
     /**
      * 开始帧动画(倒序)
      * duration时间 单位毫秒
+     * repeatCount 动画次数，默认一次。0就代表一次。1是两次
      * callback 回调，每一帧都回调，返回当前图片的下标
      */
-    fun startReverseAnime(duration: Long = 400, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
-        if (position > 0) {
+    fun startReverseAnime(duration: Long = 400, repeatCount: Int = 0, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
+        var end = bitmaps.size
+        if (end > 0 && position > 0) {
+            end -= 1
             isOrder = false
-            return ofInt("position", 0, duration, position, 0) {
+            var pos = position
+            if (repeatCount > 0) {
+                pos = end//动画两次以上，防止错乱
+            }
+            return ofInt("position", repeatCount, duration, pos, 0) {
                 if (callback != null) {
                     callback(it)
                 }
@@ -132,12 +144,29 @@ class FrameView : BaseView {
     /**
      * 自动判断是进行顺序还是倒叙动画
      */
-    fun startToogleAnime(duration: Long = 400, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
+    fun startToogleAnime(duration: Long = 400, repeatCount: Int = 0, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
         if (!isOrder) {
-            return startOrderAnime(duration, callback)
+            return startOrderAnime(duration, repeatCount, callback)
         } else {
-            return startReverseAnime(duration, callback)
+            return startReverseAnime(duration, repeatCount, callback)
         }
+    }
+
+    /**
+     * 动画从开始到结束。再从结束到开始。即一个来回动画。默认次数最大值。即无限轮播。
+     */
+    fun startCirCleAnime(duration: Long = 400, repeatCount: Int = Int.MAX_VALUE, callback: ((postion: Int) -> Unit)? = null): ObjectAnimator? {
+        var end = bitmaps.size
+        if (end > 0) {
+            end -= 1
+            isOrder = true
+            return ofInt("position", repeatCount, duration, 0, end, 0) {
+                if (callback != null) {
+                    callback(it)
+                }
+            }
+        }
+        return null
     }
 
 }

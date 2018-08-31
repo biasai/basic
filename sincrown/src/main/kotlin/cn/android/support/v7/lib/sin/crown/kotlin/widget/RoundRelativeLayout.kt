@@ -39,15 +39,15 @@ open class RoundRelativeLayout : RelativeLayout {
             field = value
             if (value != null) {
                 if (value is BaseView) {
-                    if(value.bindView==null){
+                    if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
                 } else if (value is RoundTextView) {
-                    if(value.bindView==null){
+                    if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
-                }else if (value is RoundRelativeLayout) {
-                    if(value.bindView==null){
+                } else if (value is RoundRelativeLayout) {
+                    if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
                 }
@@ -70,7 +70,7 @@ open class RoundRelativeLayout : RelativeLayout {
     override fun setSelected(selected: Boolean) {
         super.setSelected(selected)
         bindView?.let {
-            if(it.isSelected!=isSelected){
+            if (it.isSelected != isSelected) {
                 it?.isSelected = isSelected//选中状态
             }
         }
@@ -82,11 +82,11 @@ open class RoundRelativeLayout : RelativeLayout {
                 when (it.action and MotionEvent.ACTION_MASK) {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
                         bindView?.isPressed = true//按下状态
-                        isPressed=true
+                        isPressed = true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                         bindView?.isPressed = false
-                        isPressed=false
+                        isPressed = false
                     }
                     MotionEvent.ACTION_CANCEL -> {
                         //其他异常
@@ -108,21 +108,21 @@ open class RoundRelativeLayout : RelativeLayout {
     var strokeColor = Color.TRANSPARENT//边框颜色
 
     //fixme 边框颜色渐变
-    var gradientStartColor = Color.TRANSPARENT//渐变开始颜色
-    var gradientEndColor = Color.TRANSPARENT//渐变结束颜色
+    var strokeGradientStartColor = Color.TRANSPARENT//渐变开始颜色
+    var strokeGradientEndColor = Color.TRANSPARENT//渐变结束颜色
     //fixme 渐变颜色数组值【均匀渐变】，gradientColors优先
-    var gradientColors: IntArray? = null
+    var strokeGradientColors: IntArray? = null
     var ORIENTATION_VERTICAL = 0//垂直
     var ORIENTATION_HORIZONTAL = 1//水平
-    var gradientOritation = ORIENTATION_HORIZONTAL//渐变颜色方向，默认水平
+    var strokeGradientOritation = ORIENTATION_HORIZONTAL//渐变颜色方向，默认水平
 
-    fun gradientColors(vararg color: Int) {
-        gradientColors = color
+    fun strokeGradientColors(vararg color: Int) {
+        strokeGradientColors = color
     }
 
-    fun gradientColors(vararg color: String) {
-        gradientColors = IntArray(color.size)
-        gradientColors?.apply {
+    fun strokeGradientColors(vararg color: String) {
+        strokeGradientColors = IntArray(color.size)
+        strokeGradientColors?.apply {
             if (color.size > 1) {
                 for (i in 0..color.size - 1) {
                     this[i] = Color.parseColor(color[i])
@@ -137,6 +137,7 @@ open class RoundRelativeLayout : RelativeLayout {
         setLayerType(View.LAYER_TYPE_HARDWARE, null)//开启硬件加速
     }
 
+    var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
     override fun dispatchDraw(canvas: Canvas?) {
         //背景
         canvas?.let {
@@ -146,7 +147,22 @@ open class RoundRelativeLayout : RelativeLayout {
         }
 
         super.dispatchDraw(canvas)
+        if (!afterDrawRadius) {
+            drawRadius(canvas)
+        }
+        //前景
+        canvas?.let {
+            draw?.let {
+                it(canvas, BaseView.getPaint())
+            }
+        }
+        if (afterDrawRadius) {
+            drawRadius(canvas)
+        }
+    }
 
+    //画边框，圆角
+    fun drawRadius(canvas: Canvas?) {
         canvas?.let {
             if (left_top <= 0) {
                 left_top = all_radius
@@ -193,20 +209,20 @@ open class RoundRelativeLayout : RelativeLayout {
                 paint.setXfermode(null)//正常
                 //边框颜色渐变
                 var linearGradient: LinearGradient? = null
-                if (gradientColors != null) {
-                    if (gradientOritation == ORIENTATION_HORIZONTAL) {
+                if (strokeGradientColors != null) {
+                    if (strokeGradientOritation == ORIENTATION_HORIZONTAL) {
                         //水平渐变
-                        linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, gradientColors, null, Shader.TileMode.CLAMP)
+                        linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, strokeGradientColors, null, Shader.TileMode.CLAMP)
                     } else {
                         //垂直渐变
-                        linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), gradientColors, null, Shader.TileMode.CLAMP)
+                        linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), strokeGradientColors, null, Shader.TileMode.CLAMP)
                     }
                 } else {
-                    if (!(gradientStartColor == Color.TRANSPARENT && gradientEndColor == Color.TRANSPARENT)) {
-                        if (gradientOritation == ORIENTATION_HORIZONTAL) {
-                            linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, gradientStartColor, gradientEndColor, Shader.TileMode.CLAMP)
+                    if (!(strokeGradientStartColor == Color.TRANSPARENT && strokeGradientEndColor == Color.TRANSPARENT)) {
+                        if (strokeGradientOritation == ORIENTATION_HORIZONTAL) {
+                            linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, strokeGradientStartColor, strokeGradientEndColor, Shader.TileMode.CLAMP)
                         } else {
-                            linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), gradientStartColor, gradientEndColor, Shader.TileMode.CLAMP)
+                            linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), strokeGradientStartColor, strokeGradientEndColor, Shader.TileMode.CLAMP)
                         }
                     }
                 }
@@ -214,13 +230,6 @@ open class RoundRelativeLayout : RelativeLayout {
                     paint.setShader(linearGradient)
                 }
                 canvas.drawPath(path, paint)
-            }
-
-        }
-        //前景
-        canvas?.let {
-            draw?.let {
-                it(canvas, BaseView.getPaint())
             }
         }
     }
@@ -262,6 +271,61 @@ open class RoundRelativeLayout : RelativeLayout {
             }
             return h
         }
+
+    //获取文本居中Y坐标
+    fun getCenterTextY(paint: Paint): Float {
+        var baseline = (h - (paint.descent() - paint.ascent())) / 2 - paint.ascent()
+        return baseline
+    }
+
+    /**
+     * 获取文本实际居中Y坐标。
+     */
+    fun getTextY(paint: Paint, y: Float): Float {
+        var centerY = getCenterTextY(paint)
+        var sub = h / 2 - centerY
+        var y2 = y - sub
+        return y2
+    }
+
+    /**
+     * 获取文本的高度
+     */
+    fun getTextHeight(paint: Paint): Float {
+        return paint.descent() - paint.ascent()
+    }
+
+    var centerX = 0f
+        get() = centerX()
+
+    fun centerX(): Float {
+        return w / 2f
+    }
+
+    var centerY = 0f
+        get() = centerY()
+
+    fun centerY(): Float {
+        return h / 2f
+    }
+
+    //根据宽度，获取该宽度居中值
+    fun centerX(width: Float): Float {
+        return (w - width) / 2
+    }
+
+    //根据高度，获取该高度居中值
+    fun centerY(height: Float): Float {
+        return (h - height) / 2
+    }
+
+    /**
+     * 获取新画笔
+     */
+    fun getPaint(): Paint {
+        return BaseView.getPaint()
+    }
+
 
     /**
      * NormalID 默认背景图片id
@@ -319,6 +383,11 @@ open class RoundRelativeLayout : RelativeLayout {
         var objectAnimator = BaseView.ofInt(this, propertyName, repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
         objectAnimates.add(objectAnimator)
         return objectAnimator
+    }
+
+    //透明动画,透明度 0f(完全透明)到1f(完全不透明)
+    fun alpha(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
+        return ofFloat("alpha", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
     }
 
     /**

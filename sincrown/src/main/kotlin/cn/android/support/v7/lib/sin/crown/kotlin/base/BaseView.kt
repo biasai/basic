@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.TranslateAnimation
+import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundRelativeLayout
@@ -28,8 +29,18 @@ open class BaseView : View {
         }
     }
 
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs){
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
         setLayerType(View.LAYER_TYPE_HARDWARE, null)//默认硬件加速
+        context?.let {
+            val typedArray = context?.obtainStyledAttributes(attrs, R.styleable.RoundCornersRect)
+            typedArray?.let {
+                var all_radius = typedArray?.getDimension(R.styleable.RoundCornersRect_radian_all, 0f)
+                left_top = typedArray?.getDimension(R.styleable.RoundCornersRect_radian_left_top, all_radius)
+                left_bottom = typedArray?.getDimension(R.styleable.RoundCornersRect_radian_left_bottom, all_radius)
+                right_top = typedArray?.getDimension(R.styleable.RoundCornersRect_radian_right_top, all_radius)
+                right_bottom = typedArray?.getDimension(R.styleable.RoundCornersRect_radian_right_bottom, all_radius)
+            }
+        }
     }
 
     var bindView: View? = null//状态绑定的View
@@ -112,12 +123,129 @@ open class BaseView : View {
 
     protected open fun onDraw2(canvas: Canvas, paint: Paint) {}
 
+    var all_radius: Float = 0F//默认，所有圆角的角度
+    var left_top: Float = 0f//左上角
+    var left_bottom: Float = 0f//左下角
+    var right_top = 0f//右上角
+    var right_bottom = 0f//右下角
+
+    var baseStrokeWidth = 0f//边框宽度
+    var baseStrokeColor = Color.TRANSPARENT//边框颜色
+
+    //fixme 边框颜色渐变
+    var baseStrokeGradientStartColor = Color.TRANSPARENT//渐变开始颜色
+    var baseStrokeGradientEndColor = Color.TRANSPARENT//渐变结束颜色
+    //fixme 渐变颜色数组值【均匀渐变】，gradientColors优先
+    var baseStrokeGradientColors: IntArray? = null
+    var BASE_ORIENTATION_VERTICAL = 0//垂直
+    var BASE_ORIENTATION_HORIZONTAL = 1//水平
+    var baseStrokeGradientOritation = BASE_ORIENTATION_HORIZONTAL//渐变颜色方向，默认水平
+
+    fun baseStrokeGradientColors(vararg color: Int) {
+        baseStrokeGradientColors = color
+    }
+
+    fun baseStrokeGradientColors(vararg color: String) {
+        baseStrokeGradientColors = IntArray(color.size)
+        baseStrokeGradientColors?.apply {
+            if (color.size > 1) {
+                for (i in 0..color.size - 1) {
+                    this[i] = Color.parseColor(color[i])
+                }
+            } else {
+                this[0] = Color.parseColor(color[0])
+            }
+        }
+    }
+
+    var baseAfterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
+        //圆角，边框最先画。
+        if (!baseAfterDrawRadius) {
+            drawRadius(canvas)
+        }
         canvas?.let {
             draw2(it, getPaint())
             draw?.let {
                 it(canvas, getPaint())
+            }
+        }
+        //圆角，边框最后画。
+        if (baseAfterDrawRadius) {
+            drawRadius(canvas)
+        }
+    }
+
+    fun drawRadius(canvas: Canvas?) {
+        //圆角，边框
+        canvas?.let {
+            if (left_top <= 0) {
+                left_top = all_radius
+            }
+            if (left_bottom <= 0) {
+                left_bottom = all_radius
+            }
+            if (right_top <= 0) {
+                right_top = all_radius
+            }
+            if (right_bottom <= 0) {
+                right_bottom = all_radius
+            }
+            //利用内补丁画圆角。只对负补丁有效(防止和正补丁冲突，所以取负)
+            var paint = BaseView.getPaint()
+            paint.isDither = true
+            paint.isAntiAlias = true
+            paint.style = Paint.Style.FILL
+            paint.strokeWidth = 0f
+            paint.setXfermode(PorterDuffXfermode(PorterDuff.Mode.DST_IN))//取下面的交集
+            // 矩形弧度
+            val radian = floatArrayOf(left_top!!, left_top!!, right_top, right_top, right_bottom, right_bottom, left_bottom, left_bottom)
+            // 画矩形
+            var rectF = RectF(0f, 0f, width.toFloat(), height.toFloat())
+            var path = Path()
+            path.addRoundRect(rectF, radian, Path.Direction.CW)
+            canvas.drawPath(path, paint)
+
+            //画矩形边框
+            if (baseStrokeWidth > 0) {
+
+                rectF = RectF(0f + baseStrokeWidth / 2F, 0f + baseStrokeWidth / 2F, width.toFloat() - baseStrokeWidth / 2F, height.toFloat() - baseStrokeWidth / 2F)
+                path.reset()
+                path.addRoundRect(rectF, radian, Path.Direction.CW)
+                paint.strokeWidth = baseStrokeWidth
+                paint.style = Paint.Style.FILL
+                paint.color = baseStrokeColor
+                paint.setXfermode(PorterDuffXfermode(PorterDuff.Mode.DST_IN))//取下面的交集
+                paint.style = Paint.Style.FILL_AND_STROKE
+                canvas.drawPath(path, paint)
+
+                //画边框
+                paint.style = Paint.Style.STROKE
+                paint.setXfermode(null)//正常
+                //边框颜色渐变
+                var linearGradient: LinearGradient? = null
+                if (baseStrokeGradientColors != null) {
+                    if (baseStrokeGradientOritation == BASE_ORIENTATION_HORIZONTAL) {
+                        //水平渐变
+                        linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, baseStrokeGradientColors, null, Shader.TileMode.CLAMP)
+                    } else {
+                        //垂直渐变
+                        linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), baseStrokeGradientColors, null, Shader.TileMode.CLAMP)
+                    }
+                } else {
+                    if (!(baseStrokeGradientStartColor == Color.TRANSPARENT && baseStrokeGradientEndColor == Color.TRANSPARENT)) {
+                        if (baseStrokeGradientOritation == BASE_ORIENTATION_HORIZONTAL) {
+                            linearGradient = LinearGradient(0f, 0f, w.toFloat(), h / 2f, baseStrokeGradientStartColor, baseStrokeGradientEndColor, Shader.TileMode.CLAMP)
+                        } else {
+                            linearGradient = LinearGradient(0f, 0f, 0f, h.toFloat(), baseStrokeGradientStartColor, baseStrokeGradientEndColor, Shader.TileMode.CLAMP)
+                        }
+                    }
+                }
+                linearGradient?.let {
+                    paint.setShader(linearGradient)
+                }
+                canvas.drawPath(path, paint)
             }
         }
     }
@@ -161,7 +289,7 @@ open class BaseView : View {
             return h
         }
 
-    //获取文本居中Y坐标,height：以这个高度进行对其。即对其高度
+    //获取文本居中Y坐标
     fun getCenterTextY(paint: Paint): Float {
         var baseline = (h - (paint.descent() - paint.ascent())) / 2 - paint.ascent()
         return baseline
@@ -182,6 +310,30 @@ open class BaseView : View {
      */
     fun getTextHeight(paint: Paint): Float {
         return paint.descent() - paint.ascent()
+    }
+
+    var centerX = 0f
+        get() = centerX()
+
+    fun centerX(): Float {
+        return w / 2f
+    }
+
+    var centerY = 0f
+        get() = centerY()
+
+    fun centerY(): Float {
+        return h / 2f
+    }
+
+    //根据宽度，获取该宽度居中值
+    fun centerX(width: Float): Float {
+        return (w - width) / 2
+    }
+
+    //根据高度，获取该高度居中值
+    fun centerY(height: Float): Float {
+        return (h - height) / 2
     }
 
     /**
@@ -249,13 +401,19 @@ open class BaseView : View {
         return objectAnimator
     }
 
+    //透明动画,透明度 0f(完全透明)到1f(完全不透明)
+    fun alpha(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
+        return ofFloat("alpha", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+    }
+
     /**
      * 封装位置移动动画
      * toX,toY相对于父容器的移动的目标坐标点。
      * durationMillis 动画时间，单位毫秒。
-     * end 回调，动画结束后，返回当前的位置坐标。[位置会实际发生改变]
+     * end 回调，动画结束后(结束了才回调)，返回当前的位置坐标。[位置会实际发生改变]
      * fixme 注意，如果有多个控件同时开启动画，移动的时候可能会卡顿和抖动现象。多个控件最好不要同时进行动画，太耗性能了。
      */
+    //调用案例：translateAnimation(300f,800f,500){x,y-> }
     fun translateAnimation(toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null): TranslateAnimation {
         return translateAnimation(this, toX, toY, durationMillis, end)
     }
