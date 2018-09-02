@@ -20,7 +20,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
  * 自定义圆角文本宽
  * Created by 彭治铭 on 2018/5/20.
  */
-class RoundTextView : TextView {
+open class RoundTextView : TextView {
 
     constructor(context: Context) : super(context) {}
 
