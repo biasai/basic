@@ -7,6 +7,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import cn.android.support.v7.lib.sin.crown.kotlin.common.KDate;
+import cn.android.support.v7.lib.sin.crown.kotlin.common.Lunar;
+
 /**
  * 时间
  *
@@ -459,7 +462,7 @@ public class TimeUtils {
         return age;
     }
 
-
+    //星做是按阳历算的。
     public final String[] constellationArray = {"水瓶座", "双鱼座", "白羊座",
             "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座"};
 
@@ -509,8 +512,8 @@ public class TimeUtils {
 
     }
 
-    public final String[] zodiacArray = {"猴", "鸡", "狗", "猪", "鼠", "牛",
-            "虎", "兔", "龙", "蛇", "马", "羊"};
+    //生肖是按阴历算的。
+    public final String[] zodiacArray = {"子鼠", "丑牛", "寅虎", "卯兔", "辰龙", "巳蛇", "午马", "未羊", "申猴", "酉鸡", "戌狗", "亥猪"};
 
 
     /**
@@ -519,7 +522,13 @@ public class TimeUtils {
      * @return
      */
     public String get2Zodica(Calendar time) {
-        return zodiacArray[time.get(Calendar.YEAR) % 12];
+        Lunar lunar=new Lunar(time);
+        return zodiacArray[lunar.animalsYearPosition()];
+    }
+
+    //获取生肖
+    public String get2Zodica(KDate kDate) {
+        return get2Zodica(kDate.getCalendar());
     }
 
     /**
