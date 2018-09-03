@@ -20,6 +20,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundRelativeLayout
 import cn.android.support.v7.lib.sin.crown.kotlin.widget.RoundTextView
 import android.provider.MediaStore.Images.Media.getBitmap
+import android.util.Log
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 
 
@@ -172,24 +173,12 @@ open class BaseView : View {
     var baseAfterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
 
     override fun draw(canvas: Canvas?) {
-        if (Build.VERSION.SDK_INT <= 19) {//19是4.4系统。这个系统已经很少了。基本上也快淘汰了。
+        if (Build.VERSION.SDK_INT <= 19 && (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0)) {//19是4.4系统。这个系统已经很少了。基本上也快淘汰了。
             //防止4.4及以下的系统。背景出现透明黑框。
             //只能解决。父容器有背景颜色的时候。如果没有背景色。那就没有办法了。
-            var v: ViewParent? = parent
-            v?.let {
-                var v2 = v as View
-                val background: Drawable? = v2.background
-                //background包括color和Drawable,这里分开取值
-                if (background != null && (background is ColorDrawable)) {
-                    val colordDrawable = background as ColorDrawable
-                    val color = colordDrawable.getColor()
-                    canvas?.drawColor(color)//必不可少，不能为透明色。
-                    canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)//必不可少，解决透明黑框。
-                } else {
-                    canvas?.drawColor(Color.WHITE)//如果父容器没有颜色。就用白色，总比透明黑框强。
-                    canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)
-                }
-            }
+            var color = getParentColor(this)
+            canvas?.drawColor(color)//必不可少，不能为透明色。
+            canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)//必不可少，解决透明黑框。
         }
         super.draw(canvas)
         //圆角，边框最先画。
@@ -233,6 +222,8 @@ open class BaseView : View {
             }
             //利用内补丁画圆角。只对负补丁有效(防止和正补丁冲突，所以取负)
             var paint = BaseView.getPaint()
+            paint.strokeCap = Paint.Cap.BUTT
+            paint.strokeJoin = Paint.Join.MITER
             paint.isDither = true
             paint.isAntiAlias = true
             paint.style = Paint.Style.FILL
@@ -244,8 +235,9 @@ open class BaseView : View {
             var rectF = RectF(0f, 0f, width.toFloat(), height.toFloat())
             var path = Path()
             path.addRoundRect(rectF, radian, Path.Direction.CW)
-            canvas.drawPath(path, paint)
-
+            if (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0) {
+                canvas.drawPath(path, paint)
+            }
             //画矩形边框
             if (baseStrokeWidth > 0) {
                 rectF = RectF(0f + baseStrokeWidth / 2F, 0f + baseStrokeWidth / 2F, width.toFloat() - baseStrokeWidth / 2F, height.toFloat() - baseStrokeWidth / 2F)
@@ -619,6 +611,7 @@ open class BaseView : View {
 
     //水平进度(范围 0F~ 100F),从左往右
     var horizontalProgress = 0f
+
     fun horizontalProgress(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
         return ofFloat("horizontalProgress", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
     }
@@ -816,6 +809,29 @@ open class BaseView : View {
             //开始动画
             view.startAnimation(translateAnimation)
             return translateAnimation
+        }
+
+        //获取最近父容器的颜色值
+        fun getParentColor(view: View): Int {
+            var color = Color.WHITE//默认白色
+            var viewParent: ViewParent? = view.parent
+            viewParent?.let {
+                if (it is View) {
+                    var v = it as View
+                    val background: Drawable? = v.background
+                    //background包括color和Drawable,这里分开取值
+                    if (background != null && (background is ColorDrawable)) {
+                        val colordDrawable = background as ColorDrawable
+                        color = colordDrawable.getColor()
+                        if (color == Color.TRANSPARENT) {
+                            color = getParentColor(v)
+                        }
+                    } else {
+                        color = getParentColor(v)
+                    }
+                }
+            }
+            return color
         }
 
     }
