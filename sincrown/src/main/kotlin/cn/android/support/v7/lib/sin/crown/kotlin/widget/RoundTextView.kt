@@ -6,13 +6,18 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.widget.TextView
 import android.graphics.RectF
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewParent
 import android.view.animation.TranslateAnimation
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.KTimerUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
 
 
@@ -149,6 +154,25 @@ open class RoundTextView : TextView {
 
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
     override fun draw(canvas: Canvas?) {
+        if (Build.VERSION.SDK_INT <= 19) {//19是4.4系统。这个系统已经很少了。基本上也快淘汰了。
+            //防止4.4及以下的系统。背景出现透明黑框。
+            //只能解决。父容器有背景颜色的时候。如果没有背景色。那就没有办法了。
+            var v: ViewParent? = parent
+            v?.let {
+                var v2 = v as View
+                val background: Drawable? = v2.background
+                //background包括color和Drawable,这里分开取值
+                if (background!=null&&(background is ColorDrawable)) {
+                    val colordDrawable = background as ColorDrawable
+                    val color = colordDrawable.getColor()
+                    canvas?.drawColor(color)//必不可少，不能为透明色。
+                    canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)//必不可少，解决透明黑框。
+                } else {
+                    canvas?.drawColor(Color.WHITE)//如果父容器没有颜色。就用白色，总比透明黑框强。
+                    canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)
+                }
+            }
+        }
         super.draw(canvas)
         if (!afterDrawRadius) {
             drawRadius(canvas)
@@ -156,6 +180,14 @@ open class RoundTextView : TextView {
         canvas?.let {
             draw?.let {
                 it(canvas, BaseView.getPaint())
+            }
+            //画水平进度
+            drawHorizontalProgress?.let {
+                it(canvas, getPaint(), w * horizontalProgress / 100f)
+            }
+            //画垂直进度
+            drawVerticalProgress?.let {
+                it(canvas, getPaint(), h - h * verticalProgress / 100f)//方向从下往上。
             }
         }
         if (afterDrawRadius) {
@@ -409,6 +441,192 @@ open class RoundTextView : TextView {
     fun translateAnimation(toX: Float, toY: Float, durationMillis: Long = 300, end: ((x: Float, y: Float) -> Unit)? = null): TranslateAnimation {
         return BaseView.translateAnimation(this, toX, toY, durationMillis, end)
     }
+    var objectAnimatorScaleX: ObjectAnimator? = null
+    var objectAnimatorScaleY: ObjectAnimator? = null
+    //缩放动画(因为有两个属性。就不添加监听了)
+    //pivotX,pivotY 变换基准点，默认居中
+    fun scale(repeatCount: Int, duration: Long, vararg value: Float, pivotX: Float = w / 2f, pivotY: Float = h / 2f) {
+        endScale()
+        this.pivotX = pivotX
+        this.pivotY = pivotY
+        //支持多个属性，同时变化，放心会同时变化的。
+        objectAnimatorScaleX = ofFloat("scaleX", repeatCount, duration, *value)
+        objectAnimatorScaleY = ofFloat("scaleY", repeatCount, duration, *value)
+    }
 
+    //暂停缩放（属性会保持当前的状态）
+    fun pauseScale() {
+        objectAnimatorScaleX?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.pause()
+            } else {
+                it.end()
+            }
+        }
+        objectAnimatorScaleY?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.pause()
+            } else {
+                it.end()
+            }
+        }
+    }
+
+    //继续缩放
+    fun resumeScale() {
+        objectAnimatorScaleX?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.resume()
+            } else {
+                it.start()//动画会重新开始
+            }
+        }
+        objectAnimatorScaleY?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.resume()
+            } else {
+                it.start()//动画会重新开始
+            }
+        }
+    }
+
+    //fixme 停止缩放,属性会恢复到原始状态。动画也会结束。
+    fun endScale() {
+        objectAnimatorScaleX?.let {
+            it.end()//fixme 一旦调用了end()属性动画也就结束了，并且属性也会恢复到原始状态。
+            objectAnimatorScaleX = null
+        }
+        objectAnimatorScaleY?.let {
+            it.end()
+            objectAnimatorScaleY = null
+        }
+    }
+
+    var objectAnimatorRotation: ObjectAnimator? = null
+    //旋转动画
+    //pivotX,pivotY 变换基准点，默认居中
+    fun rotation(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null, pivotX: Float = w / 2f, pivotY: Float = h / 2f): ObjectAnimator {
+        endRotation()
+        this.pivotX = pivotX
+        this.pivotY = pivotY
+        objectAnimatorRotation = ofFloat("rotation", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+        return objectAnimatorRotation!!
+    }
+
+    //暂停旋转（属性会保持当前的状态）
+    fun pauseRotation() {
+        objectAnimatorRotation?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.pause()
+            } else {
+                it.end()
+            }
+        }
+        objectAnimatorRotation?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.pause()
+            } else {
+                it.end()
+            }
+        }
+    }
+
+    //继续旋转
+    fun resumeRotation() {
+        objectAnimatorRotation?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.resume()
+            } else {
+                it.start()//动画会重新开始
+            }
+        }
+        objectAnimatorRotation?.let {
+            if (Build.VERSION.SDK_INT >= 19) {
+                it.resume()
+            } else {
+                it.start()//动画会重新开始
+            }
+        }
+    }
+
+    //fixme 停止旋转,属性会恢复到原始状态。动画也会结束。
+    fun endRotation() {
+        objectAnimatorRotation?.let {
+            it.end()//fixme 一旦调用了end()属性动画也就结束了，并且属性也会恢复到原始状态。
+            objectAnimatorRotation = null
+        }
+        objectAnimatorRotation?.let {
+            it.end()
+            objectAnimatorRotation = null
+        }
+    }
+
+    var kTimer: KTimerUtils.KTimer? = null
+    //定时刷新
+    fun refresh(count: Long = 60, unit: Long = 1000, firstUnit: Long = 0, callback: (num: Long) -> Unit): KTimerUtils.KTimer? {
+        endRefresh();
+        kTimer = KTimerUtils.refreshView(this, count, unit, firstUnit, callback)
+        return kTimer
+    }
+
+    //暂停
+    fun pauseRefresh() {
+        kTimer?.let {
+            it.pause()
+        }
+    }
+
+    //判断是否暂停
+    fun isPauseRefresh(): Boolean {
+        var pause = false
+        kTimer?.let {
+            pause = it.isPause()
+        }
+        return pause
+    }
+
+    //继续
+    fun resumeRefresh() {
+        kTimer?.let {
+            it.resume()
+        }
+    }
+
+    //定时器停止
+    fun endRefresh() {
+        kTimer?.let {
+            //一个View就添加一个定时器，防止泄露。
+            it.pause()
+            it.end()//如果定时器不为空，那一定要先停止之前的定时器。
+            kTimer = null
+        }
+    }
+
+    //水平进度(范围 0F~ 100F),从左往右
+    var horizontalProgress = 0f
+    fun horizontalProgress(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
+        return ofFloat("horizontalProgress", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+    }
+
+    //返回当前水平移动坐标X,
+    var drawHorizontalProgress: ((canvas: Canvas, paint: Paint, x: Float) -> Unit)? = null
+
+    fun drawHorizontalProgress(drawHorizontalProgress: ((canvas: Canvas, paint: Paint, x: Float) -> Unit)) {
+        this.drawHorizontalProgress = drawHorizontalProgress
+    }
+
+    //fixme 垂直进度(范围 0F~ 100F)注意：方向从下往上。0是最底下，100是最顶部。
+    var verticalProgress = 0f
+
+    fun verticalProgress(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
+        return ofFloat("verticalProgress", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
+    }
+
+    //返回当前垂直移动坐标Y
+    var drawVerticalProgress: ((canvas: Canvas, paint: Paint, y: Float) -> Unit)? = null
+
+    fun drawVerticalProgress(drawVerticalProgress: ((canvas: Canvas, paint: Paint, y: Float) -> Unit)) {
+        this.drawVerticalProgress = drawVerticalProgress
+    }
 
 }
