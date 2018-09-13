@@ -147,15 +147,36 @@ object KGsonUtils {
     //数据解析(解析之后，可以显示中文。)
     //根据字段解析数据(如果该字段不存在，就返回原有数据)
     fun parseJson(result: String?, vararg field: String): String? {
+        if (result == null) {
+            return null
+        }
         var response = result
-        //解析字段里的json数据
-        for (i in field) {
-            i?.let {
-                var json = JSONObject(response)
-                if (json.has(it)) {
-                    response = json.getString(it)
+        if (field.size > 0) {
+            //解析字段里的json数据
+            for (i in field) {
+                i?.let {
+                    try {
+                        var json = JSONObject(response)
+                        if (json.has(it)) {
+                            response = json.getString(it)
+                        }
+                    } catch (e: Exception) {
+                        //Log.e("test","json异常:\t"+e.message)
+                    }
                 }
             }
+        }
+        //判断是否为合法JSON格式
+        try {
+            response?.let {
+                if (it.contains("{") || it.contains("}") || it.contains("[") || it.contains("]")) {
+                    JSONObject(response)
+                } else {
+                    response = null
+                }
+            }
+        } catch (e: Exception) {
+            response = null//不合法则制空,防止异常报错。
         }
         return response
     }
