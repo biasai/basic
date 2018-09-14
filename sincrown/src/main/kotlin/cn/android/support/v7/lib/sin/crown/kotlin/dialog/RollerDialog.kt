@@ -3,6 +3,7 @@ package cn.android.support.v7.lib.sin.crown.kotlin.dialog
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
+import android.os.Build
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -56,7 +57,9 @@ class RollerDialog(activity: Activity, isStatus: Boolean = true, isTransparent: 
                             text = "取消"
                             textSize = px.textSizeX(38)
                             textColor = Color.parseColor("#4B97F0")
-                            background = null
+                            if (Build.VERSION.SDK_INT>=16){
+                                background = null
+                            }
                             onClick {
                                 dismiss()
                             }
@@ -68,7 +71,9 @@ class RollerDialog(activity: Activity, isStatus: Boolean = true, isTransparent: 
                             text = "请选择"
                             textSize = px.textSizeX(38)
                             textColor = Color.parseColor("#888888")
-                            background = null
+                            if (Build.VERSION.SDK_INT>=16){
+                                background = null
+                            }
                         }.lparams {
                             centerInParent()
                         }
@@ -77,7 +82,9 @@ class RollerDialog(activity: Activity, isStatus: Boolean = true, isTransparent: 
                             text = "完成"
                             textSize = px.textSizeX(38)
                             textColor = Color.parseColor("#4B97F0")
-                            background = null
+                            if (Build.VERSION.SDK_INT>=16){
+                                background = null
+                            }
                             onClick {
                                 callback?.apply {
                                     rollerView?.let {

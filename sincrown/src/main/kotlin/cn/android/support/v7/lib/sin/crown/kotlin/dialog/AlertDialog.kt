@@ -26,7 +26,8 @@ class AlertDialog(activity: Activity, isStatus: Boolean = true, isTransparent: B
                 relativeLayout {
                     id = px.id("crown_alert_parent")
                     isClickable = true
-                    background=resources.getDrawable(R.drawable.crown_drawable_alert)
+                    //background=resources.getDrawable(R.drawable.crown_drawable_alert)
+                    setBackgroundResource(R.drawable.crown_drawable_alert)
                     //标题
                     textView {
                         id = px.id("crown_txt_title")
