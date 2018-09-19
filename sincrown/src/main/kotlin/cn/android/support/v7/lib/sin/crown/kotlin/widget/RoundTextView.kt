@@ -10,6 +10,7 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.Log
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewParent
@@ -19,6 +20,9 @@ import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.KTimerUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
+import org.jetbrains.anko.hintTextColor
+import org.jetbrains.anko.leftPadding
+import org.jetbrains.anko.textColor
 
 
 /**
@@ -143,6 +147,34 @@ open class RoundTextView : TextView {
         }
     }
 
+    var content: String? = null
+    fun content(content: Long, num: Int = 4, symbol: String = "*") {
+        content(content.toString(), num, symbol)
+    }
+
+    /**
+     * 中间内容带符号，如星号*
+     * content 文本内容
+     * num 符号个数
+     * symbol 符号
+     */
+    fun content(content: String?, num: Int = 4, symbol: String = "*") {
+        content?.let {
+            if (it.trim().length >= num && num > 0) {
+                this.content = it//保存真实内容
+                var length = content.length - num
+                var i = Math.floor(length / 2.0).toInt()//floor是取小，所以头部是小于尾部的。
+                var front = it.substring(0, i)
+                var behind = it.substring(i + num)
+                var sym = ""
+                for (i in 1..num) {
+                    sym = sym + symbol
+                }
+                text = front + sym.trim() + behind
+            }
+        }
+    }
+
     init {
         setLayerType(View.LAYER_TYPE_HARDWARE, null)//开启硬件加速
         BaseView.typeface?.let {
@@ -150,6 +182,14 @@ open class RoundTextView : TextView {
                 typeface = it//fixme 设置全局自定义字体
             }
         }
+        textSize = px.textSizeX(30f)
+        textColor = Color.parseColor("#181818")
+        hintTextColor = Color.parseColor("#9b9b9b")
+        gravity = Gravity.CENTER_VERTICAL or Gravity.LEFT//左靠齐，垂直居中
+        //代码不换行，更多显示三个点...
+        setHorizontallyScrolling(true);//能水平滚动较长的文本内容
+        setMaxLines(1);//最大行為一行
+        setSingleLine(true);//是否單行顯示。
     }
 
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
@@ -388,6 +428,32 @@ open class RoundTextView : TextView {
 
     fun selectorTextColor(NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
         SelectorUtils.selectorTextColor(this, NormalColor, PressColor, SelectColor)
+    }
+
+    //fixme 防止和以下方法冲突，all_radius不要设置默认值
+    fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, all_radius: Float) {
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor),  Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+    }
+    /**
+     * 波纹点击效果
+     * all_radius 圆角
+     */
+    fun selectorRippleDrawable(NormalColor: Int?, PressColor: Int?, all_radius: Float) {
+        SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+    }
+
+    fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
+        SelectorUtils.selectorRippleDrawable(this,Color.parseColor(NormalColor),Color.parseColor(PressColor),Color.parseColor(SelectColor),strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+    }
+
+    /**
+     * 波纹点击效果
+     * NormalColor 正常背景颜色值
+     * PressColor  按下正常背景颜色值 ,也可以理解为波纹点击颜色
+     * SelectColor 选中(默认和按下相同)背景颜色值
+     */
+    fun selectorRippleDrawable(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
+        SelectorUtils.selectorRippleDrawable(this,NormalColor,PressColor,SelectColor,strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
     }
 
     //属性动画集合

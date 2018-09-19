@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -404,6 +405,33 @@ open class BaseView : View {
     fun selectorTextColor(NormalColor: String, PressColor: String, SelectColor: String = PressColor) {
         SelectorUtils.selectorTextColor(this, NormalColor, PressColor, SelectColor)
     }
+
+    //fixme 防止和以下方法冲突，all_radius不要设置默认值
+    fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, all_radius: Float) {
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor),  Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+    }
+    /**
+     * 波纹点击效果
+     * all_radius 圆角
+     */
+    fun selectorRippleDrawable(NormalColor: Int?, PressColor: Int?, all_radius: Float) {
+        SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+    }
+
+    fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
+        SelectorUtils.selectorRippleDrawable(this,Color.parseColor(NormalColor),Color.parseColor(PressColor),Color.parseColor(SelectColor),strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+    }
+
+    /**
+     * 波纹点击效果
+     * NormalColor 正常背景颜色值
+     * PressColor  按下正常背景颜色值 ,也可以理解为波纹点击颜色
+     * SelectColor 选中(默认和按下相同)背景颜色值
+     */
+    fun selectorRippleDrawable(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
+        SelectorUtils.selectorRippleDrawable(this,NormalColor,PressColor,SelectColor,strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+    }
+
 
     //属性动画集合
     var objectAnimates = arrayListOf<ObjectAnimator?>()

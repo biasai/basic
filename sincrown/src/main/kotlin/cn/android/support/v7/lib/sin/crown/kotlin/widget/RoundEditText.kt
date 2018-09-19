@@ -5,26 +5,41 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.graphics.RectF
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.text.Editable
+import android.text.InputFilter
+import android.text.InputType
+import android.text.TextWatcher
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Log
+import android.view.Gravity
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewParent
 import android.view.animation.TranslateAnimation
-import android.widget.RelativeLayout
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.TextView
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
+import cn.android.support.v7.lib.sin.crown.kotlin.common.px
+import cn.android.support.v7.lib.sin.crown.kotlin.helper.AsteriskPasswordTransformationMethod
+import cn.android.support.v7.lib.sin.crown.kotlin.helper.LimitInputTextWatcher
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.KTimerUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
-
+import cn.android.support.v7.lib.sin.crown.utils.AssetsUtils
+import cn.android.support.v7.lib.sin.crown.utils.RegexUtils
+import org.jetbrains.anko.hintTextColor
+import org.jetbrains.anko.leftPadding
+import org.jetbrains.anko.textColor
 
 /**
- * 自定义圆角相对布局
+ * 自定义圆角文本宽
  * Created by 彭治铭 on 2018/5/20.
  */
-open class RoundRelativeLayout : RelativeLayout {
+open class RoundEditText : EditText {
 
     constructor(context: Context) : super(context) {}
 
@@ -47,7 +62,7 @@ open class RoundRelativeLayout : RelativeLayout {
                     if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
-                } else if (value is RoundTextView) {
+                } else if (value is RoundEditText) {
                     if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
@@ -142,12 +157,544 @@ open class RoundRelativeLayout : RelativeLayout {
         }
     }
 
+    //底部横线
+    var lineStrokeWidth = px.x(3f)//至少3像素才有圆角的效果。
+    var lineStrokeColor = Color.parseColor("#2f5dd9")
+    var lineProgress = 0f//底线的进度条
+    var isLineAnime = true//是否开启线条动画(显示和隐藏)
+
+    var hasFocus: Boolean = false
+    //是否聚焦
+    fun hasFocus(hasFocus: Boolean) {
+        if (lineStrokeWidth <= 0 || !isLineAnime || lineStrokeColor == Color.TRANSPARENT) {
+            return
+        }
+        this.hasFocus = hasFocus
+        if (hasFocus) {
+            //聚焦状态
+            ofFloat("lineProgress", 0, 350, lineProgress, 1f)
+        } else {
+            //失去焦点
+            ofFloat("lineProgress", 0, 350, lineProgress, 0f)
+        }
+    }
+
+    private var onFocusChange: ((v: android.view.View, hasFocus: Boolean) -> Unit)? = null
+    //重写聚焦事件，防止冲突
+    fun onFocusChange(onFocusChange: (v: android.view.View, hasFocus: Boolean) -> Unit) {
+        this.onFocusChange = onFocusChange
+    }
+
+    var default = -100f
+    var leftLeftOffset = default//左边图片与左边的间距
+    var leftTopOffset = default//左边图片与上面的间距
+    //左边默认图片
+    var leftDefault: Bitmap? = null
+
+    fun leftDefault(bitmap: Bitmap?) {
+        this.leftDefault = bitmap
+    }
+
+    fun leftDefault(res: Int, w: Int = 0, h: Int = 0) {
+        leftDefault(AssetsUtils.getInstance().getBitmapFromAssets(null, res, false), w, h)
+    }
+
+    fun leftDefault(bitmap: Bitmap?, w: Int = 0, h: Int = 0) {
+        this.leftDefault = bitmap
+        leftDefault?.let {
+            var width = w
+            var height = h
+            if (width == 0 || height == 0) {
+                width = px.x(it.width)
+                height = px.x(it.height)
+            }
+            if (it.width != width) {
+                var bitmap = Bitmap.createScaledBitmap(it, width, height, true)
+                it.recycle()
+                leftDefault = bitmap
+            }
+        }
+    }
+
+
+    //左边选中(触摸，聚焦，选中)图片
+    var leftSelect: Bitmap? = null
+
+    fun leftSelect(bitmap: Bitmap?) {
+        this.leftSelect = bitmap
+    }
+
+    fun leftSelect(res: Int, w: Int = 0, h: Int = 0) {
+        leftSelect(AssetsUtils.getInstance().getBitmapFromAssets(null, res, false), w, h)
+    }
+
+    fun leftSelect(bitmap: Bitmap?, w: Int = 0, h: Int = 0) {
+        this.leftSelect = bitmap
+        leftSelect?.let {
+            var width = w
+            var height = h
+            if (width == 0 || height == 0) {
+                width = px.x(it.width)
+                height = px.x(it.height)
+            }
+            if (it.width != width) {
+                var bitmap = Bitmap.createScaledBitmap(it, width, height, true)
+                it.recycle()
+                leftSelect = bitmap
+            }
+        }
+    }
+
+    //同时设置默认图片和选中图片
+    fun left(default: Int, select: Int) {
+        leftDefault(default)
+        leftSelect(select)
+    }
+
+    fun left(default: Bitmap?, select: Bitmap?) {
+        leftDefault(default)
+        leftSelect(select)
+    }
+
+    //正确位图位图与右边的距离
+    var correctRightOffSet = default
+    //与顶部的距离
+    var correctTopOffSet = default
+    //正确打勾勾的图片
+    var correct: Bitmap? = null
+
+    fun correct(bitmap: Bitmap?) {
+        this.correct = bitmap
+    }
+
+    fun correct(res: Int, w: Int = 0, h: Int = 0) {
+        correct(AssetsUtils.getInstance().getBitmapFromAssets(null, res, false), w, h)
+    }
+
+    fun correct(bitmap: Bitmap?, w: Int = 0, h: Int = 0) {
+        this.correct = bitmap
+        correct?.let {
+            var width = w
+            var height = h
+            if (width == 0 || height == 0) {
+                width = px.x(it.width)
+                height = px.x(it.height)
+            }
+            if (it.width != width) {
+                var bitmap = Bitmap.createScaledBitmap(it, width, height, true)
+                it.recycle()
+                correct = bitmap
+            }
+        }
+    }
+
+    var correctProgress = 0f
+    //成功，即输入框内容正确时手动调用
+    open fun onSuccess(isSuccess: Boolean) {
+        if (correct == null && isSuccess) {
+            correct = AssetsUtils.getInstance().getBitmapFromAssets(null, R.mipmap.crown_correct, false)
+            if (correct != null && correct!!.width != px.x(41)) {
+                var correct2 = Bitmap.createScaledBitmap(correct, px.x(41), px.x(29), true)
+                correct!!.recycle()
+                correct = correct2
+            }
+        }
+        if (isSuccess) {
+            //正确，显示成功图标
+            if (correctProgress < 1) {
+                ofFloat("correctProgress", 0, 300, correctProgress, 1f)
+            }
+        } else {
+            //错误，不显示
+            if (correctProgress > 0) {
+                ofFloat("correctProgress", 0, 300, correctProgress, 0f)
+            }
+        }
+    }
+
+    //画成功的界面
+    open fun drawSuccess(canvas: Canvas, paint: Paint) {
+        correct?.let {
+            if (correctRightOffSet <= default) {
+                correctRightOffSet = lineStrokeWidth * 2
+            }
+            if (correctTopOffSet <= default) {
+                correctTopOffSet = centerY - it.height / 2
+            }
+            var endX = w - it.width - correctRightOffSet
+            var y = correctTopOffSet
+            canvas.drawBitmap(correct, endX, y, paint)
+            var x = endX + correctProgress * it.width
+            paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+            paint.style = Paint.Style.FILL
+            canvas.drawRect(x, y, x + it.width, centerY + it.height / 2 * 1.1f, paint)
+        }
+    }
+
+    //正确位图位图与右边的距离
+    var errorRightOffSet = default
+    //与顶部的距离
+    var errorTopOffSet = default
+    var error: Bitmap? = null
+    fun error(bitmap: Bitmap?) {
+        this.error = bitmap
+    }
+
+    fun error(res: Int, w: Int = 0, h: Int = 0) {
+        error(AssetsUtils.getInstance().getBitmapFromAssets(null, res, false), w, h)
+    }
+
+    fun error(bitmap: Bitmap?, w: Int = 0, h: Int = 0) {
+        this.error = bitmap
+        error?.let {
+            var width = w
+            var height = h
+            if (width == 0 || height == 0) {
+                width = px.x(it.width)
+                height = px.x(it.height)
+            }
+            if (it.width != width) {
+                var bitmap = Bitmap.createScaledBitmap(it, width, height, true)
+                it.recycle()
+                error = bitmap
+            }
+        }
+    }
+
+    var errorProgress = 0f
+    //错误，即输入框内容错误时手动调用
+    fun onError(isError: Boolean) {
+        if (error == null && isError) {
+            error = AssetsUtils.getInstance().getBitmapFromAssets(null, R.mipmap.crown_error, false)
+            if (error != null && error!!.width != px.x(40)) {
+                var error2 = Bitmap.createScaledBitmap(error, px.x(40), px.x(40), true)
+                error!!.recycle()
+                error = error2
+            }
+        }
+        if (isError) {
+            //错误,显示错误图标
+            if (errorProgress < 1) {
+                ofFloat("errorProgress", 0, 300, errorProgress, 1f)
+            }
+        } else {
+            //没有错误，不显示
+            if (errorProgress > 0) {
+                ofFloat("errorProgress", 0, 300, errorProgress, 0f)
+            }
+        }
+    }
+
+    //画错误的界面
+    open fun drawError(canvas: Canvas, paint: Paint) {
+        error?.let {
+            if (errorRightOffSet <= default) {
+                errorRightOffSet = lineStrokeWidth * 2
+            }
+            if (errorTopOffSet <= default) {
+                errorTopOffSet = centerY - it.height / 2
+            }
+            var endX = w - it.width - errorRightOffSet
+            var y = errorTopOffSet
+            canvas.drawBitmap(error, endX, y, paint)
+            var x = endX + errorProgress * it.width
+            paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+            paint.style = Paint.Style.FILL
+            canvas.drawRect(x, y, x + it.width, centerY + it.height / 2 * 1.1f, paint)
+        }
+    }
+
+    //密码类型（默认就是显示不见的）
+    fun password() {
+        addTextChangedListener(LimitInputTextWatcher(this))//默认的筛选条件(正则:不能输入中文和空格)
+        inputType = EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(21)) //最大输入长度
+    }
+
+    //手机号类型
+    fun tel() {
+        inputType = InputType.TYPE_CLASS_NUMBER
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(11)) //最大输入长度
+    }
+
+    //数字验证码类型
+    fun code() {
+        inputType = InputType.TYPE_CLASS_NUMBER
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(6))//有四位，也有六位的。一般都是六位。
+    }
+
+    //身份证类型
+    fun idCard() {
+        inputType = InputType.TYPE_CLASS_NUMBER
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(21)) //最大输入长度，公民身份证一般为18位
+    }
+
+    //银行卡类型
+    fun bankNo() {
+        inputType = InputType.TYPE_CLASS_NUMBER
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(21)) //最大输入长度，银行卡一般为16-19位
+    }
+
+    //邮箱类型
+    fun email() {
+        addTextChangedListener(LimitInputTextWatcher(this, "[^A-Za-z0-9.@]"))
+        inputType = EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(21)) //最大输入长度，网易的是6-18个字符
+    }
+
+    //内容清除
+    fun clear() {
+        setText(null)
+    }
+
+    //是否显示密码
+    var isShowPassword = false
+        set(value) {
+            if (field != value) {
+                field = value
+                if (field) {
+                    showPassword2()
+                } else {
+                    hiddenPassword2()
+                }
+            }
+        }
+
+    //显示密码，隐藏密码交替切换
+    fun togglePassword() {
+        isShowPassword = !isShowPassword
+    }
+
+    //显示密码
+    fun showPassword() {
+        isShowPassword = true
+    }
+
+    private fun showPassword2() {
+        setTransformationMethod(HideReturnsTransformationMethod.getInstance())//密码显示
+        setSelection(length())//光标位置从1开始不是0.设置光标位置为最后一个。默认是第一个。
+    }
+
+    //隐藏密码
+    fun hiddenPassword() {
+        isShowPassword = false
+    }
+
+    private fun hiddenPassword2() {
+        try {
+            if (passWordChar == null) {
+                setTransformationMethod(PasswordTransformationMethod.getInstance())//密码隐藏
+            } else {
+                passWordChar?.let {
+                    transformationMethod = AsteriskPasswordTransformationMethod(it)//自定义密码符号
+                }
+            }
+            setSelection(length())
+        } catch (e: Exception) {
+        }
+
+    }
+
+    //设置光标宽度和颜色
+    fun setCursorColor(color: Int) {
+        try {
+            var fCursorDrawableRes = TextView::class.java.getDeclaredField("mCursorDrawableRes")//获取这个字段
+            fCursorDrawableRes.setAccessible(true)//代表这个字段、方法等等可以被访问
+            var mCursorDrawableRes = fCursorDrawableRes.getInt(this)
+
+            var fEditor = TextView::class.java.getDeclaredField("mEditor");
+            fEditor.setAccessible(true);
+            var editor = fEditor.get(this)
+
+            var clazz = editor::class.java
+            var fCursorDrawable = clazz.getDeclaredField("mCursorDrawable");
+            fCursorDrawable.setAccessible(true);
+
+            val drawables = arrayOfNulls<Drawable>(2)
+            drawables[0] = getContext().getResources().getDrawable(mCursorDrawableRes);
+            drawables[1] = getContext().getResources().getDrawable(mCursorDrawableRes);
+            drawables[0]?.setColorFilter(color, PorterDuff.Mode.SRC_IN);//SRC_IN 上下层都显示。下层居上显示。
+            drawables[1]?.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            fCursorDrawable.set(editor, drawables);
+        } catch (e: Exception) {
+            //Log.e("test", "光标颜色设置异常")
+        }
+    }
+
+    private var passWordChar: Char? = null
+    //自定义密码符合
+    //密码符号和字体颜色是一样的。
+    fun setPasswordTransformation(c: Char? = null) {
+        try {
+            this.passWordChar = c
+            if (c != null) {
+                transformationMethod = AsteriskPasswordTransformationMethod(c)//自定义密码符号，必须每次都要重新实例化，不然很容易奔溃。
+            } else {
+                setTransformationMethod(PasswordTransformationMethod.getInstance())//原始密码符号，是点。原始的是中间点。而且比较大。这个是中间小点·(原始的是中间大点)
+            }
+        } catch (e: Exception) {
+        }
+    }
+
+    //文本监听
+    fun addTextWatcher(watcher: (text: String) -> Unit) {
+        addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                s?.let {
+                    watcher(it.toString())//""空字符串也会监听返回。
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+    }
+
+    //文本空两格。首行缩进两个汉字的宽度
+    fun indentation() {
+        setText("\u3000\u3000")//缩进两个汉字的宽度,这里因为写入内容，所以hint属性就无效了。
+        //能够监听回车键，删除键。像字符键，数字键等。这个方法无法监听到。
+        setOnKeyListener(object : View.OnKeyListener {
+            override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
+                //Log.e("test","按键:\t"+keyCode)
+                event?.let {
+                    if (keyCode == KeyEvent.KEYCODE_DEL && event.getAction() == KeyEvent.ACTION_DOWN) {//监听删除键。保留最后两个字符。
+                        if (text.length == 2 || selectionStart <= 2) {//光标位置是从一开始的。1开始。不是0
+                            return true
+                        }
+                    }
+                    return false
+                }
+                return false
+            }
+        })
+    }
+
+    //监听输入框右下角完成按钮
+    fun addDone(callbak: (() -> Unit)? = null) {
+        imeOptions = EditorInfo.IME_ACTION_DONE//设置成完成类型
+        callbak?.let {
+            val onEditorActionListener = OnEditorActionListener { textView, actionId, keyEvent ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {//确定/完成
+                    it()
+                    true
+                } else false
+            }
+            setOnEditorActionListener(onEditorActionListener)
+        }
+    }
+
+    //监听输入框右下角搜索按钮
+    fun addSearch(callbak: (() -> Unit)? = null) {
+        imeOptions = EditorInfo.IME_ACTION_SEARCH//设置成搜索类型
+        callbak?.let {
+            val onEditorActionListener = OnEditorActionListener { textView, actionId, keyEvent ->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {//搜索
+                    it()
+                    true
+                } else false
+            }
+            setOnEditorActionListener(onEditorActionListener)
+        }
+    }
+
+    //监听输入框右下角发送按钮
+    fun addSend(callbak: (() -> Unit)? = null) {
+        imeOptions = EditorInfo.IME_ACTION_SEND//设置成发送类型
+        callbak?.let {
+            val onEditorActionListener = OnEditorActionListener { textView, actionId, keyEvent ->
+                if (actionId == EditorInfo.IME_ACTION_SEND) {//发送
+                    it()
+                    true
+                } else false
+            }
+            setOnEditorActionListener(onEditorActionListener)
+        }
+    }
+
+    //监听输入框右下角下一步按钮
+    fun addNext(callbak: (() -> Unit)? = null) {
+        imeOptions = EditorInfo.IME_ACTION_NEXT//设置下一步类型
+        callbak?.let {
+            val onEditorActionListener = OnEditorActionListener { textView, actionId, keyEvent ->
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {//下一步
+                    it()
+                    true
+                } else false
+            }
+            setOnEditorActionListener(onEditorActionListener)
+        }
+    }
+
+    //是否可以长按复制黏贴
+    fun isCocy(isCocy: Boolean = false) {
+        if (isCocy) {
+            //可以长按复制黏贴
+            setLongClickable(true)
+        } else {
+            //取消长按事件。禁止复制黏贴
+            setLongClickable(false)
+        }
+    }
+
+    //fixme 正则表达式
+
+    //是否为手机号
+    fun isTel(): Boolean {
+        return RegexUtils.getInstance().isMobileNO(this.text.toString().trim())
+    }
+
+    //是否为邮箱
+    fun isEmail(): Boolean {
+        return RegexUtils.getInstance().isEmail(this.text.toString().trim())
+    }
+
+    //是否为身份证
+    fun isIdCard(): Boolean {
+        return RegexUtils.getInstance().isIdCard(this.text.toString().trim())
+    }
+
+    //是否为银行卡号
+    fun isBankNo(): Boolean {
+        return RegexUtils.getInstance().isBankCard(this.text.toString().trim())
+    }
+
     init {
         setLayerType(View.LAYER_TYPE_HARDWARE, null)//开启硬件加速
+        BaseView.typeface?.let {
+            if (BaseView.isGlobal) {
+                typeface = it//fixme 设置全局自定义字体
+            }
+        }
+        //聚焦
+        setOnFocusChangeListener { v, hasFocus ->
+            hasFocus(hasFocus)
+            //防止聚焦事件冲突
+            onFocusChange?.let {
+                it(v, hasFocus)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= 16) {
+            background = null
+        }
+        textSize = px.textSizeX(32f)
+        //密码符号的颜色和字体颜色是一致的。
+        textColor = Color.parseColor("#333333")
+        hintTextColor = Color.parseColor("#9b9b9b")
+        leftPadding = px.x(60)//左边内补丁
+        gravity = Gravity.CENTER_VERTICAL or Gravity.LEFT//左靠齐，垂直居中
+        setCursorColor(lineStrokeColor)
+        //代码不换行，更多显示三个点...
+        setHorizontallyScrolling(true);//能水平滚动较长的文本内容
+        setMaxLines(1);//最大行為一行
+        setSingleLine(true);//是否單行顯示。
+        //默认就是文本类型。在此限制一下文本的长度。
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(18)) //最大输入长度
     }
 
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
-    override fun dispatchDraw(canvas: Canvas?) {
+    override fun draw(canvas: Canvas?) {
         if (Build.VERSION.SDK_INT <= 19 && (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0)) {//19是4.4系统。这个系统已经很少了。基本上也快淘汰了。
             //防止4.4及以下的系统。背景出现透明黑框。
             //只能解决。父容器有背景颜色的时候。如果没有背景色。那就没有办法了。
@@ -155,18 +702,54 @@ open class RoundRelativeLayout : RelativeLayout {
             canvas?.drawColor(color)//必不可少，不能为透明色。
             canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)//必不可少，解决透明黑框。
         }
-        //背景
-        canvas?.let {
-            onDraw?.let {
-                it(canvas, BaseView.getPaint())
-            }
-        }
-
-        super.dispatchDraw(canvas)
+        super.draw(canvas)
         if (!afterDrawRadius) {
             drawRadius(canvas)
         }
-        //前景
+        canvas?.let {
+            if (!isLineAnime) {
+                //线条动画关闭，直接显示出线条。
+                lineProgress = 1f
+            }
+            if (lineProgress > 0.06 && lineStrokeWidth > 0 && lineStrokeColor != Color.TRANSPARENT) {//0.06效果是最好的。
+                var paint = BaseView.getPaint()
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeCap = Paint.Cap.ROUND
+                paint.color = lineStrokeColor
+                paint.strokeWidth = 0f
+                //画底部横线线
+                var starX = lineStrokeWidth
+                var endX = starX + (w - lineStrokeWidth * 2) * lineProgress
+                var y = h - lineStrokeWidth / 2
+                canvas.drawRoundRect(RectF(starX, y - lineStrokeWidth, endX, y), lineStrokeWidth, lineStrokeWidth, paint)
+            }
+            //画左边图片
+            var bitmap = leftDefault
+            //聚焦，选中，触摸
+            if (isFocused || isSelected || isPressed) {
+                bitmap = leftSelect
+            }
+            bitmap?.let {
+                if (leftLeftOffset <= default) {
+                    leftLeftOffset = lineStrokeWidth * 2
+                }
+                if (leftTopOffset <= default) {
+                    leftTopOffset = centerY - it.height / 2
+                }
+                canvas.drawBitmap(it, leftLeftOffset, leftTopOffset, BaseView.getPaint())
+            }
+
+            //画成功时状态
+            if (correctProgress > 0) {
+                var paint = BaseView.getPaint()
+                drawSuccess(canvas, paint)
+            }
+            //画失败时状态
+            if (errorProgress > 0) {
+                var paint = BaseView.getPaint()
+                drawError(canvas, paint)
+            }
+        }
         canvas?.let {
             draw?.let {
                 it(canvas, BaseView.getPaint())
@@ -202,8 +785,8 @@ open class RoundRelativeLayout : RelativeLayout {
             }
             //利用内补丁画圆角。只对负补丁有效(防止和正补丁冲突，所以取负)
             var paint = BaseView.getPaint()
-            paint.strokeCap=Paint.Cap.BUTT
-            paint.strokeJoin=Paint.Join.MITER
+            paint.strokeCap = Paint.Cap.BUTT
+            paint.strokeJoin = Paint.Join.MITER
             paint.isDither = true
             paint.isAntiAlias = true
             paint.style = Paint.Style.FILL
@@ -215,7 +798,7 @@ open class RoundRelativeLayout : RelativeLayout {
             var rectF = RectF(0f, 0f, width.toFloat(), height.toFloat())
             var path = Path()
             path.addRoundRect(rectF, radian, Path.Direction.CW)
-            if(left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0){
+            if (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0) {
                 canvas.drawPath(path, paint)
             }
             //画矩形边框
@@ -264,7 +847,7 @@ open class RoundRelativeLayout : RelativeLayout {
     open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //自定义，重新绘图
-    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
+    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundEditText {
         this.draw = draw
         postInvalidate()//刷新
         return this
@@ -273,11 +856,25 @@ open class RoundRelativeLayout : RelativeLayout {
     //画自己【onDraw在draw()的流程里面，即在它的前面执行】
     var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
-    //画自己[onDraw与系统名冲突，所以加一个横线]
-    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
+    //画自己
+    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundEditText {
         this.onDraw = onDraw
         postInvalidate()//刷新
         return this
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.let {
+            onDraw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth = 0f
+                it(canvas, paint)
+            }
+        }
     }
 
     var w: Int = 0//获取控件的真实宽度
@@ -345,13 +942,6 @@ open class RoundRelativeLayout : RelativeLayout {
         return (h - height) / 2
     }
 
-    /**
-     * 获取新画笔
-     */
-    fun getPaint(): Paint {
-        return BaseView.getPaint()
-    }
-
 
     /**
      * NormalID 默认背景图片id
@@ -387,8 +977,9 @@ open class RoundRelativeLayout : RelativeLayout {
 
     //fixme 防止和以下方法冲突，all_radius不要设置默认值
     fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, all_radius: Float) {
-        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor),  Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
     }
+
     /**
      * 波纹点击效果
      * all_radius 圆角
@@ -398,7 +989,7 @@ open class RoundRelativeLayout : RelativeLayout {
     }
 
     fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
-        SelectorUtils.selectorRippleDrawable(this,Color.parseColor(NormalColor),Color.parseColor(PressColor),Color.parseColor(SelectColor),strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(SelectColor), strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom)
     }
 
     /**
@@ -408,7 +999,7 @@ open class RoundRelativeLayout : RelativeLayout {
      * SelectColor 选中(默认和按下相同)背景颜色值
      */
     fun selectorRippleDrawable(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
-        SelectorUtils.selectorRippleDrawable(this,NormalColor,PressColor,SelectColor,strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+        SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, SelectColor, strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom)
     }
 
     //属性动画集合
@@ -616,6 +1207,7 @@ open class RoundRelativeLayout : RelativeLayout {
 
     //水平进度(范围 0F~ 100F),从左往右
     var horizontalProgress = 0f
+
     fun horizontalProgress(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
         return ofFloat("horizontalProgress", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
     }

@@ -2,29 +2,56 @@ package cn.android.support.v7.lib.sin.crown.kotlin.widget
 
 import android.animation.ObjectAnimator
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.*
 import android.util.AttributeSet
 import android.graphics.RectF
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
+import android.graphics.drawable.*
 import android.os.Build
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewParent
 import android.view.animation.TranslateAnimation
-import android.widget.RelativeLayout
+import android.widget.Button
+import android.widget.EditText
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
+import cn.android.support.v7.lib.sin.crown.kotlin.common.Toast
+import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.KTimerUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
+import cn.android.support.v7.lib.sin.crown.utils.RegexUtils
+import org.jetbrains.anko.textColor
 
+//            使用案例
+//            var button=RoundButton(activity!!).apply {
+//                selectorColor(Color.WHITE,Color.RED)
+//                text="按钮"
+//                tel(tel)
+//                code(code)
+//                password(pass)
+//                confirmPassword(pass2)
+//                addEditText(edit)
+//                fixme onError会把按钮初始化为不可用，即：isEnabled=false
+//                onError { error, eidt ->
+//                    //错误信息，只有数据正确时才会处罚点击事件
+//                    Toast.show(error)
+//                }
+//                onClick {
+//                    Toast.show("点击事件")
+//                }
+//            }
+//            addView(button)
 
 /**
- * 自定义圆角相对布局
+ * 自定义圆角按钮（自带数据校验）
+ * 自带触摸阴影效果，支持波纹点击效果
  * Created by 彭治铭 on 2018/5/20.
  */
-open class RoundRelativeLayout : RelativeLayout {
+open class RoundButton : Button {
 
     constructor(context: Context) : super(context) {}
 
@@ -39,6 +66,236 @@ open class RoundRelativeLayout : RelativeLayout {
         }
     }
 
+    //手机号
+    private var tel: EditText? = null
+
+    fun tel(tel: EditText?) {
+        this.tel = tel
+        tel?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //密码
+    private var password: EditText? = null
+
+    fun password(password: EditText?) {
+        this.password = password
+        password?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //再次确认密码
+    private var confirmPassword: EditText? = null
+
+    fun confirmPassword(confirmPassword: EditText?) {
+        this.confirmPassword = confirmPassword
+        confirmPassword?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //验证码
+    private var code: EditText? = null
+
+    fun code(code: EditText?) {
+        this.code = code
+        code?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //正确的验证码，获取验证码后，需要手动复制。会和验证码文本框的值做比较
+    var realCode: String? = null
+
+    fun realCode(realCode: String?) {
+        this.realCode = realCode
+    }
+
+    //身份证号
+    private var idCard: EditText? = null
+
+    fun idCard(idCard: EditText?) {
+        this.idCard = idCard
+        idCard?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //银行卡号
+    private var bankNo: EditText? = null
+
+    fun bankNo(bankNo: EditText?) {
+        this.bankNo = bankNo
+        bankNo?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //邮箱
+    private var email: EditText? = null
+
+    fun email(email: EditText?) {
+        this.email = email
+        email?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //fixme 其它普通的文本输入框集合
+    private var editTextList = mutableListOf<EditText>()
+
+    //普通文本框
+    fun addEditText(editText: EditText?) {
+        editText?.apply {
+            addTextChanged(this)
+            editTextList.add(this)
+        }
+    }
+
+    //文本监听[主要监听是否为空]
+    private fun addTextChanged(editText: EditText?) {
+        editText?.apply {
+            addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(p0: Editable?) {
+                    isEnable()
+                }
+
+                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            })
+        }
+    }
+
+    //判断按钮是否可用
+    private var isEnable = true
+
+    private fun isEnable() {
+        isEnable = true
+        isEmpty(tel)
+        isEmpty(password)
+        isEmpty(confirmPassword)
+        isEmpty(code)
+        isEmpty(email)
+        isEmpty(idCard)
+        isEmpty(bankNo)
+        //普陀文本框集合，主要就是判断是否为空。
+        editTextList.forEach() {
+            isEmpty(it)
+        }
+        //可用状态和选中状态绑定
+        this.isEnabled = isEnable
+        isSelected = isEnable
+    }
+
+    //判断文本是否为空
+    private fun isEmpty(editText: EditText?) {
+        editText?.apply {
+            if (this.text.toString().trim().length <= 0) {
+                isEnable = false//空,不可用
+            }
+        }
+    }
+
+    var errorEditText: EditText? = null
+    //fixme 错误信息回调函数，交给调用者去实现。返回校验错误信息
+    var onError: ((error: String, eidt: RoundEditText?) -> Unit)? = null
+
+    //返回错误信息，和错误文本框
+    fun onError(onError: (error: String, eidt: RoundEditText?) -> Unit) {
+        isEnabled = false//默认不可用，只有所有数据不为空的情况下才可用。
+        this.onError = onError
+    }
+
+    //fixme 点击事件
+    fun onClick(onClick: () -> Unit) {
+        setOnClickListener {
+            var isRegular = true//判断数据是否正确，默认正确。
+            onError?.let {
+                var error: String? = onRegular()
+                error?.apply {
+                    isRegular = false//数据错误。
+                    if (errorEditText != null) {
+                        if (errorEditText is RoundEditText) {
+                            it(this, errorEditText as RoundEditText)
+                        } else {
+                            it(this, null)
+                        }
+                    } else {
+                        it(this, null)
+                    }
+                }
+            }
+            if (isRegular) {
+                onClick()//fixme 如果数据校验正确，才会触发点击事件
+            }
+        }
+    }
+
+    //fixme 正则判断，返回错误的信息，如果正确则返回为空。
+    open fun onRegular(): String? {
+        tel?.apply {
+            if (!RegexUtils.getInstance().isMobileNO(this.text.toString().trim())) {
+                errorEditText = this
+                return "手机号格式不正确"
+            }else if (this is RoundEditText){
+                this.onError(false)//正确，就不显示错误图片。
+            }
+        }
+        var p1 = password?.text.toString()
+        var p2 = confirmPassword?.text.toString()
+        if (p1 != null && p2 != null && (!p1.equals(p2))) {
+            errorEditText = confirmPassword
+            return "两次输入的密码不一致"
+        }else if (this is RoundEditText){
+            this.onError(false)
+        }
+
+        code?.apply {
+            //真实验证码如果不为空，就进行判断
+            realCode?.let {
+                if (!this.text.toString().trim().equals(it.trim())) {
+                    errorEditText = this
+                    return "验证码不正确"
+                }else if (this is RoundEditText){
+                    this.onError(false)
+                }
+            }
+        }
+
+        email?.apply {
+            if (!RegexUtils.getInstance().isEmail(this.text.toString().trim())) {
+                errorEditText = this
+                return "邮箱格式不正确"
+            }else if (this is RoundEditText){
+                this.onError(false)
+            }
+        }
+
+        idCard?.apply {
+            if (!RegexUtils.getInstance().isIdCard(this.text.toString().trim())) {
+                errorEditText = this
+                return "身份证号格式不正确"
+            }else if (this is RoundEditText){
+                this.onError(false)
+            }
+        }
+
+        bankNo?.apply {
+            if (!RegexUtils.getInstance().isBankCard(this.text.toString().trim())) {
+                errorEditText = this
+                return "银行卡号格式不正确"
+            }else if (this is RoundEditText){
+                this.onError(false)
+            }
+        }
+        errorEditText = null
+        return null
+    }
+
+
     var bindView: View? = null//状态绑定的View
         set(value) {
             field = value
@@ -47,7 +304,7 @@ open class RoundRelativeLayout : RelativeLayout {
                     if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
-                } else if (value is RoundTextView) {
+                } else if (value is RoundButton) {
                     if (value.bindView == null) {
                         value.bindView = this//相互绑定
                     }
@@ -108,13 +365,19 @@ open class RoundRelativeLayout : RelativeLayout {
     }
 
     var all_radius: Float = 0F//默认，所有圆角的角度
+
     var left_top: Float = 0f//左上角
+
     var left_bottom: Float = 0f//左下角
+
     var right_top = 0f//右上角
+
     var right_bottom = 0f//右下角
 
     var strokeWidth = 0f//边框宽度
+
     var strokeColor = Color.TRANSPARENT//边框颜色
+
 
     //fixme 边框颜色渐变
     var strokeGradientStartColor = Color.TRANSPARENT//渐变开始颜色
@@ -142,12 +405,21 @@ open class RoundRelativeLayout : RelativeLayout {
         }
     }
 
+    //fixme 初始化=================================================================================
     init {
         setLayerType(View.LAYER_TYPE_HARDWARE, null)//开启硬件加速
+        BaseView.typeface?.let {
+            if (BaseView.isGlobal) {
+                typeface = it//fixme 设置全局自定义字体
+            }
+        }
+        textSize = px.textSizeX(30f)
+        textColor = Color.WHITE
+        gravity = Gravity.CENTER
     }
 
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
-    override fun dispatchDraw(canvas: Canvas?) {
+    override fun draw(canvas: Canvas?) {
         if (Build.VERSION.SDK_INT <= 19 && (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0)) {//19是4.4系统。这个系统已经很少了。基本上也快淘汰了。
             //防止4.4及以下的系统。背景出现透明黑框。
             //只能解决。父容器有背景颜色的时候。如果没有背景色。那就没有办法了。
@@ -155,18 +427,10 @@ open class RoundRelativeLayout : RelativeLayout {
             canvas?.drawColor(color)//必不可少，不能为透明色。
             canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)//必不可少，解决透明黑框。
         }
-        //背景
-        canvas?.let {
-            onDraw?.let {
-                it(canvas, BaseView.getPaint())
-            }
-        }
-
-        super.dispatchDraw(canvas)
+        super.draw(canvas)
         if (!afterDrawRadius) {
             drawRadius(canvas)
         }
-        //前景
         canvas?.let {
             draw?.let {
                 it(canvas, BaseView.getPaint())
@@ -188,6 +452,7 @@ open class RoundRelativeLayout : RelativeLayout {
     //画边框，圆角
     fun drawRadius(canvas: Canvas?) {
         canvas?.let {
+            //Log.e("test","all_radius：\t"+all_radius+"\tright_top：\t"+right_top)
             if (left_top <= 0) {
                 left_top = all_radius
             }
@@ -202,8 +467,8 @@ open class RoundRelativeLayout : RelativeLayout {
             }
             //利用内补丁画圆角。只对负补丁有效(防止和正补丁冲突，所以取负)
             var paint = BaseView.getPaint()
-            paint.strokeCap=Paint.Cap.BUTT
-            paint.strokeJoin=Paint.Join.MITER
+            paint.strokeCap = Paint.Cap.BUTT
+            paint.strokeJoin = Paint.Join.MITER
             paint.isDither = true
             paint.isAntiAlias = true
             paint.style = Paint.Style.FILL
@@ -215,7 +480,7 @@ open class RoundRelativeLayout : RelativeLayout {
             var rectF = RectF(0f, 0f, width.toFloat(), height.toFloat())
             var path = Path()
             path.addRoundRect(rectF, radian, Path.Direction.CW)
-            if(left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0){
+            if (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0) {
                 canvas.drawPath(path, paint)
             }
             //画矩形边框
@@ -264,7 +529,7 @@ open class RoundRelativeLayout : RelativeLayout {
     open var draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
     //自定义，重新绘图
-    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
+    open fun draw(draw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundButton {
         this.draw = draw
         postInvalidate()//刷新
         return this
@@ -273,11 +538,25 @@ open class RoundRelativeLayout : RelativeLayout {
     //画自己【onDraw在draw()的流程里面，即在它的前面执行】
     var onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null
 
-    //画自己[onDraw与系统名冲突，所以加一个横线]
-    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundRelativeLayout {
+    //画自己
+    fun onDraw_(onDraw: ((canvas: Canvas, paint: Paint) -> Unit)? = null): RoundButton {
         this.onDraw = onDraw
         postInvalidate()//刷新
         return this
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.let {
+            onDraw?.let {
+                var paint = Paint()
+                paint.isAntiAlias = true
+                paint.isDither = true
+                paint.style = Paint.Style.FILL_AND_STROKE
+                paint.strokeWidth = 0f
+                it(canvas, paint)
+            }
+        }
     }
 
     var w: Int = 0//获取控件的真实宽度
@@ -345,13 +624,9 @@ open class RoundRelativeLayout : RelativeLayout {
         return (h - height) / 2
     }
 
-    /**
-     * 获取新画笔
-     */
-    fun getPaint(): Paint {
-        return BaseView.getPaint()
+    fun selectorDrawable(NormalDrawable: Drawable?, PressDrawable: Drawable?, SelectDrawable: Drawable? = PressDrawable) {
+        SelectorUtils.selectorDrawable(this, NormalDrawable, PressDrawable, SelectDrawable)
     }
-
 
     /**
      * NormalID 默认背景图片id
@@ -366,6 +641,7 @@ open class RoundRelativeLayout : RelativeLayout {
     fun selectorDrawable(NormalBtmap: Bitmap?, PressBitmap: Bitmap?, SelectBitmap: Bitmap? = PressBitmap) {
         SelectorUtils.selectorDrawable(this, NormalBtmap, PressBitmap, SelectBitmap)
     }
+
 
     //颜色
     fun selectorColor(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor) {
@@ -387,8 +663,9 @@ open class RoundRelativeLayout : RelativeLayout {
 
     //fixme 防止和以下方法冲突，all_radius不要设置默认值
     fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, all_radius: Float) {
-        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor),  Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
     }
+
     /**
      * 波纹点击效果
      * all_radius 圆角
@@ -398,7 +675,7 @@ open class RoundRelativeLayout : RelativeLayout {
     }
 
     fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
-        SelectorUtils.selectorRippleDrawable(this,Color.parseColor(NormalColor),Color.parseColor(PressColor),Color.parseColor(SelectColor),strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(SelectColor), strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom)
     }
 
     /**
@@ -408,7 +685,8 @@ open class RoundRelativeLayout : RelativeLayout {
      * SelectColor 选中(默认和按下相同)背景颜色值
      */
     fun selectorRippleDrawable(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
-        SelectorUtils.selectorRippleDrawable(this,NormalColor,PressColor,SelectColor,strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+        //Log.e("test","all:\t"+all_radius+"\tleft:\t"+left_top+"\tright:\t"+right_top+"\t"+right_bottom)
+        SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, SelectColor, strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom)
     }
 
     //属性动画集合
@@ -616,6 +894,7 @@ open class RoundRelativeLayout : RelativeLayout {
 
     //水平进度(范围 0F~ 100F),从左往右
     var horizontalProgress = 0f
+
     fun horizontalProgress(repeatCount: Int, duration: Long, vararg value: Float, AnimatorUpdateListener: ((values: Float) -> Unit)? = null): ObjectAnimator {
         return ofFloat("horizontalProgress", repeatCount, duration, *value, AnimatorUpdateListener = AnimatorUpdateListener)
     }
