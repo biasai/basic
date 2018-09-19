@@ -118,6 +118,12 @@ open class RoundButton : Button {
     }
 
     //fixme 正确的验证码，获取验证码后，需要手动的赋值。会和验证码文本框的值做比较
+    //fixme 如果code2为空字符"",表示不需要判断验证码是否正确。本地不判断，交给服务器取判断。
+    //fixme 为null,表示用户没有点击获取验证码。提示用户获取验证码。
+    //fixme 如果不为null也不为空字符串"",则会判断验证是否正确。
+
+    //fixme null 提醒用户获取验证码（用户还没获取验证码）
+    //fixme ""空字符，用户已经获取验证码，不会判断验证码是否正确。
     var code2: String? = null
 
     fun code2(code2: String?) {
@@ -216,13 +222,14 @@ open class RoundButton : Button {
     var onError: ((error: String, eidt: RoundEditText?) -> Unit)? = null
 
     //fixme 返回错误信息，和错误文本框。该方法在点击事件的前面。
-    //fixme 只有数据正确了才能触发点击事件。
+    //fixme 只有数据正确了才会触发点击事件。
     fun onError(onError: (error: String, eidt: RoundEditText?) -> Unit) {
         isEnabled = false//默认不可用，只有所有数据不为空的情况下才可用。
+        isSelected = false
         this.onError = onError
     }
 
-    //fixme 点击事件
+    //fixme 点击事件，onError()没有错误返回时，才会触发
     fun onClick(onClick: () -> Unit) {
         setOnClickListener {
             var isRegular = true//判断数据是否正确，默认正确。
@@ -249,6 +256,7 @@ open class RoundButton : Button {
 
     //fixme 正则判断，返回错误的信息，如果正确则返回为空。
     open fun onRegular(): String? {
+        errorEditText = null
         tel?.apply {
             if (!RegexUtils.getInstance().isMobileNO(this.text.toString().trim())) {
                 errorEditText = this
@@ -276,15 +284,25 @@ open class RoundButton : Button {
             }
         }
         code?.apply {
-            //真实验证码如果不为空，就进行判断
-            code2?.let {
-                if (!this.text.toString().trim().equals(it.trim())) {
-                    errorEditText = this
-                    return "验证码不正确"
-                } else if (this is RoundEditText) {
-                    this.onError(false)
+            //fixme code2是真实验证码，需要手动赋值。
+            //fixme 如果code2为空字符"",表示不需要判断验证码是否正确。
+            //fixme 为null,表示用户没有点击获取验证码。
+            if (code2 == null || code2?.trim().equals("")) {
+                if (code2 == null) {
+                    return "请先获取验证码"
+                }
+            } else {
+                //真实验证码如果不为空，就进行判断
+                code2?.let {
+                    if (!this.text.toString().trim().equals(it.trim())) {
+                        errorEditText = this
+                        return "验证码不正确"
+                    } else if (this is RoundEditText) {
+                        this.onError(false)
+                    }
                 }
             }
+
         }
         email?.apply {
             if (!RegexUtils.getInstance().isEmail(this.text.toString().trim())) {
@@ -312,7 +330,6 @@ open class RoundButton : Button {
                 this.onError(false)
             }
         }
-        errorEditText = null
         return null
     }
 
