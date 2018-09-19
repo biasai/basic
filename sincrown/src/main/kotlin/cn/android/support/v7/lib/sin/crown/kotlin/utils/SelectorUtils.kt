@@ -76,15 +76,54 @@ object SelectorUtils {
                 setColor(NormalColor)
             }
         }
-        if (Build.VERSION.SDK_INT >= 21 && isRipple) {//5.0以上才支持波纹效果
+        var selectGradientDrawable = GradientDrawable()
+        selectGradientDrawable?.apply {
+            //fixme 圆角,注意，不能小于或等于0.必须大于0，不然波纹没有效果。
+            var all_radius2 = all_radius
+            if (all_radius2 < 1) {
+                all_radius2 = 1f
+            }
+            var left_top2 = left_top
+            if (left_top2 < 1) {
+                left_top2 = all_radius2
+            }
+            var left_bottom2 = left_bottom
+            if (left_bottom2 < 1) {
+                left_bottom2 = all_radius2
+            }
+            var right_top2 = right_top
+            if (right_top2 < 1) {
+                right_top2 = all_radius2
+            }
+            var right_bottom2 = right_bottom
+            if (right_bottom2 < 1) {
+                right_bottom2 = all_radius2
+            }
+            //cornerRadius=all_radius2
+            cornerRadii = floatArrayOf(left_top2, left_top2, right_top2, right_top2, right_bottom2, right_bottom2, left_bottom2, left_bottom2)
+            //边框大小和边框颜色
+            //setStroke(strokeWidth.toInt(), strokeColor)
             SelectColor?.let {
-                var rippleDrawable = RippleDrawable(
-                        ColorStateList.valueOf(it),//波纹颜色
-                        normalGradientDrawable,//控制波纹范围
-                        null
-                )
-                view.isClickable = true//具体点击能力,必不可少
-                view.background = rippleDrawable
+                setColor(SelectColor)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= 21 && isRipple && NormalColor != null && SelectColor != null) {//5.0以上才支持波纹效果
+            //普通状态
+            var rippleDrawable = RippleDrawable(
+                    ColorStateList.valueOf(SelectColor),//波纹颜色
+                    normalGradientDrawable,//控制波纹范围
+                    null
+            )
+            //选中状态，是选中。不是触摸
+            var rippleDrawable2 = RippleDrawable(
+                    ColorStateList.valueOf(NormalColor!!),//波纹颜色
+                    selectGradientDrawable,//控制波纹范围
+                    null
+            )
+            view.isClickable = true//具体点击能力,必不可少
+            //防止与触摸状态冲突。去掉触摸状态。只要普通状态，和选中状态。放心两中状态都有波纹效果
+            selectorDrawable(view, rippleDrawable, null, rippleDrawable2)
+//                view.background = rippleDrawable
 //                以下这个方法不要用，就直接用背景即可,图片就使用下面的。颜色就使用背景
 //                if (view is CheckBox) {//多选框
 //                    view.buttonDrawable = rippleDrawable
@@ -93,7 +132,6 @@ object SelectorUtils {
 //                } else {//一般View
 //                    view.setBackgroundDrawable(rippleDrawable)
 //                }
-            }
         } else {
             normalGradientDrawable?.apply {
                 //fixme 此时不需要波浪效果，所以角度可以为0
@@ -119,7 +157,6 @@ object SelectorUtils {
                 }
                 cornerRadii = floatArrayOf(left_top2, left_top2, right_top2, right_top2, right_bottom2, right_bottom2, left_bottom2, left_bottom2)
             }
-            var selectGradientDrawable = GradientDrawable()
             selectGradientDrawable?.apply {
                 //fixme 此时不需要波浪效果，所以角度可以为0
                 var all_radius2 = all_radius
@@ -144,11 +181,6 @@ object SelectorUtils {
                 }
                 //cornerRadius=all_radius2
                 cornerRadii = floatArrayOf(left_top2, left_top2, right_top2, right_top2, right_bottom2, right_bottom2, left_bottom2, left_bottom2)
-                //边框大小和边框颜色
-                //setStroke(strokeWidth.toInt(), strokeColor)
-                SelectColor?.let {
-                    setColor(SelectColor)
-                }
             }
             //点击一般效果，5.0以下不支持波纹
             selectorDrawable(view, normalGradientDrawable, selectGradientDrawable, selectGradientDrawable)

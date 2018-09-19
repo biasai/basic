@@ -77,6 +77,16 @@ open class RoundButton : Button {
         }
     }
 
+    //手机号2(可能会有两个手机号,如：新手机号和旧手机号)
+    private var tel2: EditText? = null
+
+    fun tel2(tel2: EditText?) {
+        this.tel2 = tel2
+        tel2?.apply {
+            addTextChanged(this)
+        }
+    }
+
     //密码
     private var password: EditText? = null
 
@@ -87,12 +97,12 @@ open class RoundButton : Button {
         }
     }
 
-    //再次确认密码
-    private var confirmPassword: EditText? = null
+    //再次确认重复密码，和第一个密码作比较
+    private var password2: EditText? = null
 
-    fun confirmPassword(confirmPassword: EditText?) {
-        this.confirmPassword = confirmPassword
-        confirmPassword?.apply {
+    fun password2(password2: EditText?) {
+        this.password2 = password2
+        password2?.apply {
             addTextChanged(this)
         }
     }
@@ -107,11 +117,11 @@ open class RoundButton : Button {
         }
     }
 
-    //正确的验证码，获取验证码后，需要手动复制。会和验证码文本框的值做比较
-    var realCode: String? = null
+    //fixme 正确的验证码，获取验证码后，需要手动的赋值。会和验证码文本框的值做比较
+    var code2: String? = null
 
-    fun realCode(realCode: String?) {
-        this.realCode = realCode
+    fun code2(code2: String?) {
+        this.code2 = code2
     }
 
     //身份证号
@@ -176,13 +186,14 @@ open class RoundButton : Button {
     private fun isEnable() {
         isEnable = true
         isEmpty(tel)
+        isEmpty(tel2)
         isEmpty(password)
-        isEmpty(confirmPassword)
+        isEmpty(password2)
         isEmpty(code)
         isEmpty(email)
         isEmpty(idCard)
         isEmpty(bankNo)
-        //普陀文本框集合，主要就是判断是否为空。
+        //普通文本框集合，主要就是判断是否为空。
         editTextList.forEach() {
             isEmpty(it)
         }
@@ -204,7 +215,8 @@ open class RoundButton : Button {
     //fixme 错误信息回调函数，交给调用者去实现。返回校验错误信息
     var onError: ((error: String, eidt: RoundEditText?) -> Unit)? = null
 
-    //返回错误信息，和错误文本框
+    //fixme 返回错误信息，和错误文本框。该方法在点击事件的前面。
+    //fixme 只有数据正确了才能触发点击事件。
     fun onError(onError: (error: String, eidt: RoundEditText?) -> Unit) {
         isEnabled = false//默认不可用，只有所有数据不为空的情况下才可用。
         this.onError = onError
@@ -245,18 +257,27 @@ open class RoundButton : Button {
                 this.onError(false)//正确，就不显示错误图片。
             }
         }
-        var p1 = password?.text.toString()
-        var p2 = confirmPassword?.text.toString()
-        if (p1 != null && p2 != null && (!p1.equals(p2))) {
-            errorEditText = confirmPassword
-            return "两次输入的密码不一致"
-        } else if (this is RoundEditText) {
-            this.onError(false)
+        if (password != null && password2 != null) {
+            var p1 = password?.text.toString()
+            var p2 = password2?.text.toString()
+            if ((!p1.equals(p2))) {
+                errorEditText = password2
+                return "两次输入的密码不一致"
+            } else if (this is RoundEditText) {
+                this.onError(false)
+            }
         }
-
+        tel2?.apply {
+            if (!RegexUtils.getInstance().isMobileNO(this.text.toString().trim())) {
+                errorEditText = this
+                return "手机号格式不正确"
+            } else if (this is RoundEditText) {
+                this.onError(false)//正确，就不显示错误图片。
+            }
+        }
         code?.apply {
             //真实验证码如果不为空，就进行判断
-            realCode?.let {
+            code2?.let {
                 if (!this.text.toString().trim().equals(it.trim())) {
                     errorEditText = this
                     return "验证码不正确"
@@ -265,7 +286,6 @@ open class RoundButton : Button {
                 }
             }
         }
-
         email?.apply {
             if (!RegexUtils.getInstance().isEmail(this.text.toString().trim())) {
                 errorEditText = this
