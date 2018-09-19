@@ -367,13 +367,27 @@ open class RoundRelativeLayout : RelativeLayout {
         SelectorUtils.selectorDrawable(this, NormalBtmap, PressBitmap, SelectBitmap)
     }
 
-    //颜色
+    //fixme 颜色,调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorColor(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor) {
-        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        if (Build.VERSION.SDK_INT <= 19) {
+            //fixme 防止按钮圆角不正确，必须对每个圆角都使用GradientDrawable控制。
+            SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, all_radius = this.all_radius, left_top = this.left_top, right_top = this.right_top, right_bottom = this.right_bottom, left_bottom = this.left_bottom, isRipple = false)
+
+        } else {
+            SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        }
+
     }
 
+    //fixme 颜色,调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorColor(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor) {
-        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        if (Build.VERSION.SDK_INT <= 19) {
+            SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, all_radius = this.all_radius, left_top = this.left_top, right_top = this.right_top, right_bottom = this.right_bottom, left_bottom = this.left_bottom, isRipple = false)
+
+        } else {
+            SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        }
+
     }
 
     //字体颜色

@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.text.TextUtils
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
@@ -186,10 +187,22 @@ open class RoundTextView : TextView {
         textColor = Color.parseColor("#181818")
         hintTextColor = Color.parseColor("#9b9b9b")
         gravity = Gravity.CENTER_VERTICAL or Gravity.LEFT//左靠齐，垂直居中
+    }
+
+    /**
+     * fixme 更多（显示不全时）显示三个点...
+     * fixme 【设置了显示更多，文本垂直居中就无效了。始终与顶部对齐,但是可以使用topPadding控制文本垂直位置。】
+     * lines 显示的最大行数。
+     */
+    fun setMore(lines: Int = 1) {
+        //能水平滚动较长的文本内容。不要用这个。圆角会没有效果的。就是这个搞的圆角没有效果。
+        //setHorizontallyScrolling(true)
+        //setSingleLine(true)//是否單行顯示。过时了。也会导致圆角没有效果。
+        //fixme 上面两个属性导致圆角无效。不要使用。TextView,editText,button都会导致圆角无效。
+
+        setMaxLines(lines);//fixme 显示最大行,这个也是关键。setMaxLines和setEllipsize同时设置，才会显示更多。
         //代码不换行，更多显示三个点...
-        setHorizontallyScrolling(true);//能水平滚动较长的文本内容
-        setMaxLines(1);//最大行為一行
-        setSingleLine(true);//是否單行顯示。
+        setEllipsize(TextUtils.TruncateAt.END)//fixme 这个才是关键，会显示更多
     }
 
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
@@ -412,13 +425,27 @@ open class RoundTextView : TextView {
         SelectorUtils.selectorDrawable(this, NormalBtmap, PressBitmap, SelectBitmap)
     }
 
-    //颜色
+    //fixme 颜色,调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorColor(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor) {
-        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        if (Build.VERSION.SDK_INT <= 19) {
+            //fixme 防止按钮圆角不正确，必须对每个圆角都使用GradientDrawable控制。
+            SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, all_radius = this.all_radius, left_top = this.left_top, right_top = this.right_top, right_bottom = this.right_bottom, left_bottom = this.left_bottom, isRipple = false)
+
+        } else {
+            SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        }
+
     }
 
+    //fixme 颜色,调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorColor(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor) {
-        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        if (Build.VERSION.SDK_INT <= 19) {
+            SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, all_radius = this.all_radius, left_top = this.left_top, right_top = this.right_top, right_bottom = this.right_bottom, left_bottom = this.left_bottom, isRipple = false)
+
+        } else {
+            SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        }
+
     }
 
     //字体颜色
@@ -431,9 +458,11 @@ open class RoundTextView : TextView {
     }
 
     //fixme 防止和以下方法冲突，all_radius不要设置默认值
+    //fixme 调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, all_radius: Float) {
-        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor),  Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
     }
+
     /**
      * 波纹点击效果
      * all_radius 圆角
@@ -443,7 +472,7 @@ open class RoundTextView : TextView {
     }
 
     fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
-        SelectorUtils.selectorRippleDrawable(this,Color.parseColor(NormalColor),Color.parseColor(PressColor),Color.parseColor(SelectColor),strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+        SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(SelectColor), strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom)
     }
 
     /**
@@ -453,7 +482,7 @@ open class RoundTextView : TextView {
      * SelectColor 选中(默认和按下相同)背景颜色值
      */
     fun selectorRippleDrawable(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = this.all_radius, left_top: Float = this.left_top, right_top: Float = this.right_top, right_bottom: Float = this.right_bottom, left_bottom: Float = this.left_bottom) {
-        SelectorUtils.selectorRippleDrawable(this,NormalColor,PressColor,SelectColor,strokeWidth,strokeColor,all_radius,left_top,right_top,right_bottom,left_bottom)
+        SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, SelectColor, strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom)
     }
 
     //属性动画集合

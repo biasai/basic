@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.drawable.*
 import android.os.Build
 import android.text.Editable
+import android.text.TextUtils
 import android.text.TextWatcher
 import android.util.Log
 import android.view.Gravity
@@ -240,7 +241,7 @@ open class RoundButton : Button {
             if (!RegexUtils.getInstance().isMobileNO(this.text.toString().trim())) {
                 errorEditText = this
                 return "手机号格式不正确"
-            }else if (this is RoundEditText){
+            } else if (this is RoundEditText) {
                 this.onError(false)//正确，就不显示错误图片。
             }
         }
@@ -249,7 +250,7 @@ open class RoundButton : Button {
         if (p1 != null && p2 != null && (!p1.equals(p2))) {
             errorEditText = confirmPassword
             return "两次输入的密码不一致"
-        }else if (this is RoundEditText){
+        } else if (this is RoundEditText) {
             this.onError(false)
         }
 
@@ -259,7 +260,7 @@ open class RoundButton : Button {
                 if (!this.text.toString().trim().equals(it.trim())) {
                     errorEditText = this
                     return "验证码不正确"
-                }else if (this is RoundEditText){
+                } else if (this is RoundEditText) {
                     this.onError(false)
                 }
             }
@@ -269,7 +270,7 @@ open class RoundButton : Button {
             if (!RegexUtils.getInstance().isEmail(this.text.toString().trim())) {
                 errorEditText = this
                 return "邮箱格式不正确"
-            }else if (this is RoundEditText){
+            } else if (this is RoundEditText) {
                 this.onError(false)
             }
         }
@@ -278,7 +279,7 @@ open class RoundButton : Button {
             if (!RegexUtils.getInstance().isIdCard(this.text.toString().trim())) {
                 errorEditText = this
                 return "身份证号格式不正确"
-            }else if (this is RoundEditText){
+            } else if (this is RoundEditText) {
                 this.onError(false)
             }
         }
@@ -287,7 +288,7 @@ open class RoundButton : Button {
             if (!RegexUtils.getInstance().isBankCard(this.text.toString().trim())) {
                 errorEditText = this
                 return "银行卡号格式不正确"
-            }else if (this is RoundEditText){
+            } else if (this is RoundEditText) {
                 this.onError(false)
             }
         }
@@ -416,6 +417,22 @@ open class RoundButton : Button {
         textSize = px.textSizeX(30f)
         textColor = Color.WHITE
         gravity = Gravity.CENTER
+    }
+
+    /**
+     * fixme 更多（显示不全时）显示三个点...
+     * fixme 【设置了显示更多，文本垂直居中就无效了。始终与顶部对齐,但是可以使用topPadding控制文本垂直位置。】
+     * lines 显示的最大行数。
+     */
+    fun setMore(lines: Int = 1) {
+        //能水平滚动较长的文本内容。不要用这个。圆角会没有效果的。就是这个搞的圆角没有效果。
+        //setHorizontallyScrolling(true)
+        //setSingleLine(true)//是否單行顯示。过时了。也会导致圆角没有效果。
+        //fixme 上面两个属性导致圆角无效。不要使用。TextView,editText,button都会导致圆角无效。
+
+        setMaxLines(lines);//fixme 显示最大行,这个也是关键。setMaxLines和setEllipsize同时设置，才会显示更多。
+        //代码不换行，更多显示三个点...
+        setEllipsize(TextUtils.TruncateAt.END)//fixme 这个才是关键，会显示更多
     }
 
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
@@ -643,13 +660,18 @@ open class RoundButton : Button {
     }
 
 
-    //颜色
+    //fixme 颜色,调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorColor(NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor) {
-        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+//        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        //fixme 防止按钮圆角不正确，必须对每个圆角都使用GradientDrawable控制。
+        SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, all_radius = this.all_radius, left_top = this.left_top, right_top = this.right_top, right_bottom = this.right_bottom, left_bottom = this.left_bottom, isRipple = false)
     }
 
+    //fixme 颜色,调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorColor(NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor) {
-        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+//        SelectorUtils.selectorColor(this, NormalColor, PressColor, SelectColor)
+        SelectorUtils.selectorRippleDrawable(this, NormalColor, PressColor, PressColor, all_radius = this.all_radius, left_top = this.left_top, right_top = this.right_top, right_bottom = this.right_bottom, left_bottom = this.left_bottom, isRipple = false)
+
     }
 
     //字体颜色
@@ -662,6 +684,7 @@ open class RoundButton : Button {
     }
 
     //fixme 防止和以下方法冲突，all_radius不要设置默认值
+    //fixme 调用之前一定要先设置圆角的属性。不然圆角不正确
     fun selectorRippleDrawable(NormalColor: String?, PressColor: String?, all_radius: Float) {
         SelectorUtils.selectorRippleDrawable(this, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
     }

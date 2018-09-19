@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.*
 import android.os.Build
-import android.util.Log
 import android.view.View
 import android.widget.CheckBox
 import android.widget.RadioButton
@@ -22,20 +21,20 @@ import cn.android.support.v7.lib.sin.crown.kotlin.common.px
  */
 object SelectorUtils {
 
-    fun selectorRippleDrawable(view: View, NormalColor: String?, PressColor: String?, all_radius: Float) {
-        selectorRippleDrawable(view, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+    fun selectorRippleDrawable(view: View, NormalColor: String?, PressColor: String?, all_radius: Float, isRipple: Boolean = true) {
+        selectorRippleDrawable(view, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(PressColor), left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius, isRipple = isRipple)
     }
 
     /**
      * 波纹点击效果
      * all_radius fixme 圆角,注意，不能小于或等于0.必须大于0，不然波纹没有效果。
      */
-    fun selectorRippleDrawable(view: View, NormalColor: Int?, PressColor: Int?, all_radius: Float) {
-        selectorRippleDrawable(view, NormalColor, PressColor, PressColor, left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius)
+    fun selectorRippleDrawable(view: View, NormalColor: Int?, PressColor: Int?, all_radius: Float, isRipple: Boolean = true) {
+        selectorRippleDrawable(view, NormalColor, PressColor, PressColor, left_top = all_radius, right_top = all_radius, right_bottom = all_radius, left_bottom = all_radius, isRipple = isRipple)
     }
 
-    fun selectorRippleDrawable(view: View, NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = 1f, left_top: Float = 1f, right_top: Float = 1f, right_bottom: Float = 1f, left_bottom: Float = 1f) {
-        selectorRippleDrawable(view, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(SelectColor), strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom)
+    fun selectorRippleDrawable(view: View, NormalColor: String?, PressColor: String?, SelectColor: String? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = 1f, left_top: Float = 1f, right_top: Float = 1f, right_bottom: Float = 1f, left_bottom: Float = 1f, isRipple: Boolean = true) {
+        selectorRippleDrawable(view, Color.parseColor(NormalColor), Color.parseColor(PressColor), Color.parseColor(SelectColor), strokeWidth, strokeColor, all_radius, left_top, right_top, right_bottom, left_bottom, isRipple)
     }
 
     /**
@@ -43,40 +42,41 @@ object SelectorUtils {
      * NormalColor 正常背景颜色值
      * PressColor  按下正常背景颜色值 ,也可以理解为波纹点击颜色
      * SelectColor 选中(默认和按下相同)背景颜色值
+     * isRipple 是否显示波浪效果
      */
-    fun selectorRippleDrawable(view: View, NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = 1f, left_top: Float = 0f, right_top: Float = 0f, right_bottom: Float = 0f, left_bottom: Float = 0f) {
-        if (Build.VERSION.SDK_INT >= 21) {//5.0以上才支持波纹效果
-            var normalGradientDrawable = GradientDrawable()
-            normalGradientDrawable?.apply {
-                //fixme 圆角,注意，不能小于或等于0.必须大于0，不然波纹没有效果。
-                var all_radius2 = all_radius
-                if (all_radius2 < 1) {
-                    all_radius2 = 1f
-                }
-                var left_top2 = left_top
-                if (left_top2 < 1) {
-                    left_top2 = all_radius2
-                }
-                var left_bottom2 = left_bottom
-                if (left_bottom2 < 1) {
-                    left_bottom2 = all_radius2
-                }
-                var right_top2 = right_top
-                if (right_top2 < 1) {
-                    right_top2 = all_radius2
-                }
-                var right_bottom2 = right_bottom
-                if (right_bottom2 < 1) {
-                    right_bottom2 = all_radius2
-                }
-                //cornerRadius=all_radius2
-                cornerRadii = floatArrayOf(left_top2, left_top2, right_top2, right_top2, right_bottom2, right_bottom2, left_bottom2, left_bottom2)
-                //边框大小和边框颜色
-                //setStroke(strokeWidth.toInt(), strokeColor)
-                NormalColor?.let {
-                    setColor(NormalColor)
-                }
+    fun selectorRippleDrawable(view: View, NormalColor: Int?, PressColor: Int?, SelectColor: Int? = PressColor, strokeWidth: Int = 0, strokeColor: Int = Color.TRANSPARENT, all_radius: Float = 0f, left_top: Float = 0f, right_top: Float = 0f, right_bottom: Float = 0f, left_bottom: Float = 0f, isRipple: Boolean = true) {
+        var normalGradientDrawable = GradientDrawable()
+        normalGradientDrawable?.apply {
+            //fixme 圆角,注意，不能小于或等于0.必须大于0，不然波纹没有效果。
+            var all_radius2 = all_radius
+            if (all_radius2 < 1) {
+                all_radius2 = 1f
             }
+            var left_top2 = left_top
+            if (left_top2 < 1) {
+                left_top2 = all_radius2
+            }
+            var left_bottom2 = left_bottom
+            if (left_bottom2 < 1) {
+                left_bottom2 = all_radius2
+            }
+            var right_top2 = right_top
+            if (right_top2 < 1) {
+                right_top2 = all_radius2
+            }
+            var right_bottom2 = right_bottom
+            if (right_bottom2 < 1) {
+                right_bottom2 = all_radius2
+            }
+            //cornerRadius=all_radius2
+            cornerRadii = floatArrayOf(left_top2, left_top2, right_top2, right_top2, right_bottom2, right_bottom2, left_bottom2, left_bottom2)
+            //边框大小和边框颜色
+            //setStroke(strokeWidth.toInt(), strokeColor)
+            NormalColor?.let {
+                setColor(NormalColor)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= 21 && isRipple) {//5.0以上才支持波纹效果
             SelectColor?.let {
                 var rippleDrawable = RippleDrawable(
                         ColorStateList.valueOf(it),//波纹颜色
@@ -95,8 +95,63 @@ object SelectorUtils {
 //                }
             }
         } else {
+            normalGradientDrawable?.apply {
+                //fixme 此时不需要波浪效果，所以角度可以为0
+                var all_radius2 = all_radius
+                if (all_radius2 <= 0) {
+                    all_radius2 = 0f
+                }
+                var left_top2 = left_top
+                if (left_top2 <= 0) {
+                    left_top2 = all_radius2
+                }
+                var left_bottom2 = left_bottom
+                if (left_bottom2 <= 0) {
+                    left_bottom2 = all_radius2
+                }
+                var right_top2 = right_top
+                if (right_top2 <= 0) {
+                    right_top2 = all_radius2
+                }
+                var right_bottom2 = right_bottom
+                if (right_bottom2 <= 0) {
+                    right_bottom2 = all_radius2
+                }
+                cornerRadii = floatArrayOf(left_top2, left_top2, right_top2, right_top2, right_bottom2, right_bottom2, left_bottom2, left_bottom2)
+            }
+            var selectGradientDrawable = GradientDrawable()
+            selectGradientDrawable?.apply {
+                //fixme 此时不需要波浪效果，所以角度可以为0
+                var all_radius2 = all_radius
+                if (all_radius2 <= 0) {
+                    all_radius2 = 0f
+                }
+                var left_top2 = left_top
+                if (left_top2 <= 0) {
+                    left_top2 = all_radius2
+                }
+                var left_bottom2 = left_bottom
+                if (left_bottom2 <= 0) {
+                    left_bottom2 = all_radius2
+                }
+                var right_top2 = right_top
+                if (right_top2 <= 0) {
+                    right_top2 = all_radius2
+                }
+                var right_bottom2 = right_bottom
+                if (right_bottom2 <= 0) {
+                    right_bottom2 = all_radius2
+                }
+                //cornerRadius=all_radius2
+                cornerRadii = floatArrayOf(left_top2, left_top2, right_top2, right_top2, right_bottom2, right_bottom2, left_bottom2, left_bottom2)
+                //边框大小和边框颜色
+                //setStroke(strokeWidth.toInt(), strokeColor)
+                SelectColor?.let {
+                    setColor(SelectColor)
+                }
+            }
             //点击一般效果，5.0以下不支持波纹
-            selectorColor(view, NormalColor, PressColor, SelectColor)
+            selectorDrawable(view, normalGradientDrawable, selectGradientDrawable, selectGradientDrawable)
         }
     }
 
