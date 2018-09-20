@@ -85,13 +85,27 @@ open class RoundEditText : EditText {
 
     //fixme selectorDrawable(R.mipmap.p_dont_agree,null, R.mipmap.p_agree)
     //fixme 注意，如果要用选中状态，触摸状态最好设置为null空。不会有卡顿冲突。
-    //重写选中状态。
+    //重写选中状态。isSelected=true。选中状态。一定要手动调用。
     override fun setSelected(selected: Boolean) {
         super.setSelected(selected)
         bindView?.let {
             if (it.isSelected != isSelected) {
                 it?.isSelected = isSelected//选中状态
             }
+        }
+        onSelectChangedList.forEach {
+            it?.let {
+                it(selected)//选中监听
+            }
+        }
+    }
+
+    //fixme 监听选中状态。防止多个监听事件冲突，所以添加事件数组。
+    private var onSelectChanged: ((selected: Boolean) -> Unit)? = null
+    private var onSelectChangedList = mutableListOf<((selected: Boolean) -> Unit)?>()
+    fun addSelected(onSelectChanged: ((selected: Boolean) -> Unit)) {
+        onSelectChanged.let {
+            onSelectChangedList?.add(it)
         }
     }
 
@@ -299,6 +313,7 @@ open class RoundEditText : EditText {
         if (isSuccess) {
             //正确，显示成功图标
             if (correctProgress < 1) {
+                onError(false)//正确的显示了，错误的就不能显示。即防止错误和成功同时显示。图片先隐藏。再显示。所以放在前面。
                 ofFloat("correctProgress", 0, 300, correctProgress, 1f)
             }
         } else {
@@ -372,6 +387,7 @@ open class RoundEditText : EditText {
         if (isError) {
             //错误,显示错误图标
             if (errorProgress < 1) {
+                onSuccess(false)//错误的图片显示了，正确的就不能显示。
                 ofFloat("errorProgress", 0, 300, errorProgress, 1f)
             }
         } else {

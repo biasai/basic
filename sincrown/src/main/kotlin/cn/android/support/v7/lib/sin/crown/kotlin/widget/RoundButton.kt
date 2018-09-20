@@ -18,6 +18,7 @@ import android.view.View
 import android.view.animation.TranslateAnimation
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.kotlin.common.Toast
@@ -171,8 +172,32 @@ open class RoundButton : Button {
         }
     }
 
+    //fixme 其它普通的文本输入框集合,对TextVeiw文本也进行监听。主要监听不能为空。
+    private var textViewtList = mutableListOf<TextView>()
+
+    //普通文本框
+    fun addTextView(textView: TextView?) {
+        textView?.apply {
+            addTextChanged(this)
+            textViewtList.add(this)
+        }
+    }
+
+    //同意，即协议。必须同意了，才能触发点击事件。
+    private var agreeViewList = mutableListOf<BaseView>()
+
+    //普通协议，isSelected选中即表示同意。
+    fun addAgreeView(view: BaseView?) {
+        view?.apply {
+            this.addSelected {
+                isEnable()//选中状态发生改变时，判断是否可用。
+            }
+            agreeViewList.add(this)
+        }
+    }
+
     //文本监听[主要监听是否为空]
-    private fun addTextChanged(editText: EditText?) {
+    private fun addTextChanged(editText: TextView?) {
         editText?.apply {
             addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(p0: Editable?) {
@@ -203,13 +228,22 @@ open class RoundButton : Button {
         editTextList.forEach() {
             isEmpty(it)
         }
+        textViewtList.forEach() {
+            isEmpty(it)
+        }
+        //同意控件，主要判断是否选中。选中就表示同意
+        agreeViewList.forEach {
+            if (!it.isSelected) {
+                isEnable = false//没有选中，就不能用。
+            }
+        }
         //可用状态和选中状态绑定
         this.isEnabled = isEnable
         isSelected = isEnable
     }
 
     //判断文本是否为空
-    private fun isEmpty(editText: EditText?) {
+    private fun isEmpty(editText: TextView?) {
         editText?.apply {
             if (this.text.toString().trim().length <= 0) {
                 isEnable = false//空,不可用
@@ -283,27 +317,6 @@ open class RoundButton : Button {
                 this.onError(false)//正确，就不显示错误图片。
             }
         }
-        code?.apply {
-            //fixme code2是真实验证码，需要手动赋值。
-            //fixme 如果code2为空字符"",表示不需要判断验证码是否正确。
-            //fixme 为null,表示用户没有点击获取验证码。
-            if (code2 == null || code2?.trim().equals("")) {
-                if (code2 == null) {
-                    return "请先获取验证码"
-                }
-            } else {
-                //真实验证码如果不为空，就进行判断
-                code2?.let {
-                    if (!this.text.toString().trim().equals(it.trim())) {
-                        errorEditText = this
-                        return "验证码不正确"
-                    } else if (this is RoundEditText) {
-                        this.onError(false)
-                    }
-                }
-            }
-
-        }
         email?.apply {
             if (!RegexUtils.getInstance().isEmail(this.text.toString().trim())) {
                 errorEditText = this
@@ -329,6 +342,28 @@ open class RoundButton : Button {
             } else if (this is RoundEditText) {
                 this.onError(false)
             }
+        }
+        //fixme 验证码最后判断
+        code?.apply {
+            //fixme code2是真实验证码，需要手动赋值。
+            //fixme 如果code2为空字符"",表示不需要判断验证码是否正确。
+            //fixme 为null,表示用户没有点击获取验证码。
+            if (code2 == null || code2?.trim().equals("")) {
+                if (code2 == null) {
+                    return "请先获取验证码"
+                }
+            } else {
+                //真实验证码如果不为空，就进行判断
+                code2?.let {
+                    if (!this.text.toString().trim().equals(it.trim())) {
+                        errorEditText = this
+                        return "验证码不正确"
+                    } else if (this is RoundEditText) {
+                        this.onError(false)
+                    }
+                }
+            }
+
         }
         return null
     }
@@ -368,13 +403,27 @@ open class RoundButton : Button {
 
     //fixme selectorDrawable(R.mipmap.p_dont_agree,null, R.mipmap.p_agree)
     //fixme 注意，如果要用选中状态，触摸状态最好设置为null空。不会有卡顿冲突。
-    //重写选中状态。
+    //重写选中状态。isSelected=true。选中状态。一定要手动调用。
     override fun setSelected(selected: Boolean) {
         super.setSelected(selected)
         bindView?.let {
             if (it.isSelected != isSelected) {
                 it?.isSelected = isSelected//选中状态
             }
+        }
+        onSelectChangedList.forEach {
+            it?.let {
+                it(selected)//选中监听
+            }
+        }
+    }
+
+    //fixme 监听选中状态。防止多个监听事件冲突，所以添加事件数组。
+    private var onSelectChanged: ((selected: Boolean) -> Unit)? = null
+    private var onSelectChangedList = mutableListOf<((selected: Boolean) -> Unit)?>()
+    fun addSelected(onSelectChanged: ((selected: Boolean) -> Unit)) {
+        onSelectChanged.let {
+            onSelectChangedList?.add(it)
         }
     }
 

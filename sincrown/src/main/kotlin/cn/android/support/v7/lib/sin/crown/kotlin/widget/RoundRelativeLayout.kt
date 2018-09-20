@@ -73,13 +73,27 @@ open class RoundRelativeLayout : RelativeLayout {
 
     //fixme selectorDrawable(R.mipmap.p_dont_agree,null, R.mipmap.p_agree)
     //fixme 注意，如果要用选中状态，触摸状态最好设置为null空。不会有卡顿冲突。
-    //重写选中状态。
+    //重写选中状态。isSelected=true。选中状态。一定要手动调用。
     override fun setSelected(selected: Boolean) {
         super.setSelected(selected)
         bindView?.let {
             if (it.isSelected != isSelected) {
                 it?.isSelected = isSelected//选中状态
             }
+        }
+        onSelectChangedList.forEach {
+            it?.let {
+                it(selected)//选中监听
+            }
+        }
+    }
+
+    //fixme 监听选中状态。防止多个监听事件冲突，所以添加事件数组。
+    private var onSelectChanged: ((selected: Boolean) -> Unit)? = null
+    private var onSelectChangedList = mutableListOf<((selected: Boolean) -> Unit)?>()
+    fun addSelected(onSelectChanged: ((selected: Boolean) -> Unit)) {
+        onSelectChanged.let {
+            onSelectChangedList?.add(it)
         }
     }
 
