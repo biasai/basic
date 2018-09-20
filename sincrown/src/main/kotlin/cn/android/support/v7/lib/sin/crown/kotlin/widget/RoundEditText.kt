@@ -718,6 +718,14 @@ open class RoundEditText : EditText {
         setEllipsize(TextUtils.TruncateAt.END)//fixme 这个才是关键，会显示更多
     }
 
+    /**
+     * fixme 设置最大输入个数。即最大文字个数。
+     * setMaxLines(lines) 设置行数
+     */
+    fun setMaxLength(num: Int){
+        filters = arrayOf<InputFilter>(InputFilter.LengthFilter(num)) //最大输入长度，网易的是6-18个字符
+    }
+
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
     override fun draw(canvas: Canvas?) {
         if (Build.VERSION.SDK_INT <= 19 && (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0)) {//19是4.4系统。这个系统已经很少了。基本上也快淘汰了。
