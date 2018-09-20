@@ -27,6 +27,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.utils.KTimerUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
 import cn.android.support.v7.lib.sin.crown.utils.RegexUtils
 import org.jetbrains.anko.textColor
+import java.util.regex.Pattern
 
 //            使用案例
 //            var button=RoundButton(activity!!).apply {
@@ -70,9 +71,13 @@ open class RoundButton : Button {
 
     //手机号
     private var tel: EditText? = null
+    var telError: String = "手机号格式不正确"
 
-    fun tel(tel: EditText?) {
+    fun tel(tel: EditText?, telError: String? = this.telError) {
         this.tel = tel
+        telError?.let {
+            this.telError = it
+        }
         tel?.apply {
             addTextChanged(this)
         }
@@ -80,39 +85,100 @@ open class RoundButton : Button {
 
     //手机号2(可能会有两个手机号,如：新手机号和旧手机号)
     private var tel2: EditText? = null
+    var tel2Error: String = "手机号格式不正确"
 
-    fun tel2(tel2: EditText?) {
+    fun tel2(tel2: EditText?, tel2Error: String? = this.tel2Error) {
         this.tel2 = tel2
+        tel2Error?.let {
+            this.tel2Error = it
+        }
         tel2?.apply {
             addTextChanged(this)
         }
     }
 
+    //判断是否为空
+    fun isEmpty(text: String?): Boolean {
+        text?.let {
+            if (it.trim().length > 0) {
+                return false//不为空
+            }
+        }
+        return true//空
+    }
+
+    //密码正则表达式
+    //正则表达式一 ，复杂（大小写字母、数字、特殊符号 四选三）,并且长度不能小于八位
+    var passwordPatten: String? = "^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\\W_]+$)(?![a-z0-9]+$)(?![a-z\\W_]+$)(?![0-9\\W_]+$)[a-zA-Z0-9\\W_]{8,}$"
+    //正则表达式二，简单
+    //var passwordPatten2: String? = "^[0-9A-Za-z]{6,20}\$"//由6-20字母和数字组成
+    var passwordPatten2: String? = "^.{6,20}\$"//由6-20位任意字符组成 .匹配除 "/n" 之外的任何单个字符
+
+    //fixme 判断密码是否正确
+    fun isPasswordCorrect(password: String): Boolean {
+        var patten = passwordPatten//优先使用正则表达式一
+        if (isEmpty(patten)) {
+            patten = passwordPatten2//其次使用正则表达式二
+        }
+        if (isEmpty(patten)) {
+            return true//如果两个正则都为空，则不进行判断，直接判断为正确
+        }
+        val p = Pattern.compile(patten)
+        val m = p.matcher(password)
+        return m.matches()
+    }
+
     //密码
     private var password: EditText? = null
+    var passwordError: String = "密码格式不正确"
 
-    fun password(password: EditText?) {
+    fun password(password: EditText?, passwordError: String? = this.passwordError) {
         this.password = password
+        passwordError?.let {
+            this.passwordError = it
+        }
         password?.apply {
             addTextChanged(this)
         }
     }
 
+    //fixme 只对password和password2作对比判断，password3是另外的，不做对比判断
     //再次确认重复密码，和第一个密码作比较
     private var password2: EditText? = null
+    var password2Error: String = "两次输入的密码不一致"
 
-    fun password2(password2: EditText?) {
+    fun password2(password2: EditText?, password2Error: String? = this.password2Error) {
         this.password2 = password2
+        password2Error?.let {
+            this.password2Error = it
+        }
         password2?.apply {
+            addTextChanged(this)
+        }
+    }
+
+    //防止要输入第三个密码，如：旧密码
+    private var password3: EditText? = null
+    var password3Error: String = "密码格式不正确"
+
+    fun password3(password3: EditText?, password3Error: String? = this.password3Error) {
+        this.password3 = password3
+        password3Error?.let {
+            this.password3Error = it
+        }
+        password3?.apply {
             addTextChanged(this)
         }
     }
 
     //验证码
     private var code: EditText? = null
-
-    fun code(code: EditText?) {
+    var codeError: String = "请先获取验证码"
+    fun code(code: EditText?, codeError: String? = this.codeError) {
         this.code = code
+        codeError?.let {
+            this.codeError = it
+        }
         code?.apply {
             addTextChanged(this)
         }
@@ -126,16 +192,22 @@ open class RoundButton : Button {
     //fixme null 提醒用户获取验证码（用户还没获取验证码）
     //fixme ""空字符，用户已经获取验证码，不会判断验证码是否正确。
     var code2: String? = null
-
-    fun code2(code2: String?) {
+    var code2Error: String = "验证码不正确"
+    fun code2(code2: String?, code2Error: String? = this.code2Error) {
         this.code2 = code2
+        code2Error?.let {
+            this.code2Error = it
+        }
     }
 
     //身份证号
     private var idCard: EditText? = null
-
-    fun idCard(idCard: EditText?) {
+    var idCardError: String = "身份证号格式不正确"
+    fun idCard(idCard: EditText?, idCardError: String? = this.idCardError) {
         this.idCard = idCard
+        idCardError?.let {
+            this.idCardError = it
+        }
         idCard?.apply {
             addTextChanged(this)
         }
@@ -143,9 +215,12 @@ open class RoundButton : Button {
 
     //银行卡号
     private var bankNo: EditText? = null
-
-    fun bankNo(bankNo: EditText?) {
+    var bankNoError: String = "银行卡号格式不正确"
+    fun bankNo(bankNo: EditText?, bankNoError: String? = this.bankNoError) {
         this.bankNo = bankNo
+        bankNoError?.let {
+            this.bankNoError = it
+        }
         bankNo?.apply {
             addTextChanged(this)
         }
@@ -153,15 +228,19 @@ open class RoundButton : Button {
 
     //邮箱
     private var email: EditText? = null
+    var emailError: String = "邮箱格式不正确"
 
-    fun email(email: EditText?) {
+    fun email(email: EditText?, emailError: String? = this.emailError) {
         this.email = email
+        emailError?.let {
+            this.emailError = it
+        }
         email?.apply {
             addTextChanged(this)
         }
     }
 
-    //fixme 其它普通的文本输入框集合
+    //fixme 其它普通的文本输入框集合。主要监听不能为空。
     private var editTextList = mutableListOf<EditText>()
 
     //普通文本框
@@ -220,6 +299,7 @@ open class RoundButton : Button {
         isEmpty(tel2)
         isEmpty(password)
         isEmpty(password2)
+        isEmpty(password3)
         isEmpty(code)
         isEmpty(email)
         isEmpty(idCard)
@@ -253,11 +333,11 @@ open class RoundButton : Button {
 
     var errorEditText: EditText? = null
     //fixme 错误信息回调函数，交给调用者去实现。返回校验错误信息
-    var onError: ((error: String, eidt: RoundEditText?) -> Unit)? = null
+    var onError: ((error: String, edit: RoundEditText?) -> Unit)? = null
 
     //fixme 返回错误信息，和错误文本框。该方法在点击事件的前面。
     //fixme 只有数据正确了才会触发点击事件。
-    fun onError(onError: (error: String, eidt: RoundEditText?) -> Unit) {
+    fun onError(onError: (error: String, edit: RoundEditText?) -> Unit) {
         isEnabled = false//默认不可用，只有所有数据不为空的情况下才可用。
         isSelected = false
         this.onError = onError
@@ -294,17 +374,37 @@ open class RoundButton : Button {
         tel?.apply {
             if (!RegexUtils.getInstance().isMobileNO(this.text.toString().trim())) {
                 errorEditText = this
-                return "手机号格式不正确"
+                return telError//"手机号格式不正确"
             } else if (this is RoundEditText) {
                 this.onError(false)//正确，就不显示错误图片。
             }
         }
+
+        password3?.apply {
+            if (!isPasswordCorrect(this.text.toString())) {
+                errorEditText = this
+                return password3Error//密码格式不正确（旧密码，一般旧密码都在前，所以先判断）
+            }else if (this is RoundEditText) {
+                this.onError(false)//正确，就不显示错误图片。
+            }
+        }
+
+        password?.apply {
+            if (!isPasswordCorrect(this.text.toString())) {
+                errorEditText = this
+                return passwordError//密码格式不正确
+            }else if (this is RoundEditText) {
+                this.onError(false)//正确，就不显示错误图片。
+            }
+        }
+
+        //fixme 只对password和password2作对比判断，password3是另外的，不做对比判断
         if (password != null && password2 != null) {
             var p1 = password?.text.toString()
             var p2 = password2?.text.toString()
             if ((!p1.equals(p2))) {
                 errorEditText = password2
-                return "两次输入的密码不一致"
+                return password2Error//"两次输入的密码不一致"
             } else if (this is RoundEditText) {
                 this.onError(false)
             }
@@ -312,7 +412,7 @@ open class RoundButton : Button {
         tel2?.apply {
             if (!RegexUtils.getInstance().isMobileNO(this.text.toString().trim())) {
                 errorEditText = this
-                return "手机号格式不正确"
+                return tel2Error//"手机号格式不正确"（新手机号）
             } else if (this is RoundEditText) {
                 this.onError(false)//正确，就不显示错误图片。
             }
@@ -320,7 +420,7 @@ open class RoundButton : Button {
         email?.apply {
             if (!RegexUtils.getInstance().isEmail(this.text.toString().trim())) {
                 errorEditText = this
-                return "邮箱格式不正确"
+                return emailError//"邮箱格式不正确"
             } else if (this is RoundEditText) {
                 this.onError(false)
             }
@@ -329,7 +429,7 @@ open class RoundButton : Button {
         idCard?.apply {
             if (!RegexUtils.getInstance().isIdCard(this.text.toString().trim())) {
                 errorEditText = this
-                return "身份证号格式不正确"
+                return idCardError//"身份证号格式不正确"
             } else if (this is RoundEditText) {
                 this.onError(false)
             }
@@ -338,7 +438,7 @@ open class RoundButton : Button {
         bankNo?.apply {
             if (!RegexUtils.getInstance().isBankCard(this.text.toString().trim())) {
                 errorEditText = this
-                return "银行卡号格式不正确"
+                return bankNoError//"银行卡号格式不正确"
             } else if (this is RoundEditText) {
                 this.onError(false)
             }
@@ -350,14 +450,14 @@ open class RoundButton : Button {
             //fixme 为null,表示用户没有点击获取验证码。
             if (code2 == null || code2?.trim().equals("")) {
                 if (code2 == null) {
-                    return "请先获取验证码"
+                    return codeError//"请先获取验证码"
                 }
             } else {
                 //真实验证码如果不为空，就进行判断
                 code2?.let {
                     if (!this.text.toString().trim().equals(it.trim())) {
                         errorEditText = this
-                        return "验证码不正确"
+                        return code2Error//"验证码不正确"
                     } else if (this is RoundEditText) {
                         this.onError(false)
                     }
