@@ -1,6 +1,7 @@
 package cn.android.support.v7.lib.sin.crown.kotlin.widget
 
 import android.animation.ObjectAnimator
+import android.app.Activity
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -19,11 +20,11 @@ import android.view.animation.TranslateAnimation
 import cn.android.support.v7.lib.sin.crown.kotlin.R
 import cn.android.support.v7.lib.sin.crown.kotlin.base.BaseView
 import cn.android.support.v7.lib.sin.crown.kotlin.common.px
+import cn.android.support.v7.lib.sin.crown.kotlin.https.Bitmaps
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.KTimerUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
-import org.jetbrains.anko.hintTextColor
-import org.jetbrains.anko.leftPadding
-import org.jetbrains.anko.textColor
+import cn.android.support.v7.lib.sin.crown.utils.AssetsUtils
+import org.jetbrains.anko.*
 
 
 /**
@@ -106,21 +107,22 @@ open class RoundTextView : TextView {
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         var b = super.dispatchTouchEvent(event)
         //防止点击事件冲突。所以。一定要放到super()后面。
-        if (bindView != null) {
-            event?.let {
-                when (it.action and MotionEvent.ACTION_MASK) {
-                    MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
-                        bindView?.isPressed = true//按下状态
-                        isPressed = true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                        bindView?.isPressed = false
-                        isPressed = false
-                    }
-                    MotionEvent.ACTION_CANCEL -> {
-                        //其他异常
-                        bindView?.isPressed = false
-                    }
+        event?.let {
+            when (it.action and MotionEvent.ACTION_MASK) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_MOVE -> {
+                    bindView?.isPressed = true//按下状态
+                    isPressed = true
+                    invalidate()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                    bindView?.isPressed = false
+                    isPressed = false
+                    invalidate()
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    //其他异常
+                    bindView?.isPressed = false
+                    invalidate()
                 }
             }
         }
@@ -219,6 +221,354 @@ open class RoundTextView : TextView {
         setEllipsize(TextUtils.TruncateAt.END)//fixme 这个才是关键，会显示更多
     }
 
+    //fixme 清空原始背景
+    fun clearOriBackground() {
+        if (Build.VERSION.SDK_INT >= 16) {
+            backgroundColor = Color.TRANSPARENT
+            background = null
+        } else {
+            backgroundColor = Color.TRANSPARENT
+            backgroundDrawable = null
+        }
+    }
+
+    //这个背景图片，会铺满整个控件
+    private var autoUrlBg: Bitmap? = null//fixme 自定义网络背景图片,对图片是否为空，是否释放，做了判断。防止奔溃。比原生的背景图片更安全。
+
+    fun autoUrlBg(bitmap: Bitmap?) {
+        this.autoUrlBg = bitmap
+        if (context != null && context is Activity) {
+            context.runOnUiThread {
+                invalidate()
+            }
+        }
+    }
+
+    fun autoUrlBg(resId: Int, isRGB_565: Boolean = false) {
+        this.autoUrlBg = AssetsUtils.getInstance().getBitmapFromAssets(null, resId, isRGB_565)
+        if (context != null && context is Activity) {
+            context.runOnUiThread {
+                invalidate()
+            }
+        }
+    }
+
+    fun autoUrlAssetsBg(assetsPath: String, isRGB_565: Boolean = false) {
+        this.autoUrlBg = AssetsUtils.getInstance().getBitmapFromAssets(assetsPath, 0, isRGB_565)
+        if (context != null && context is Activity) {
+            context.runOnUiThread {
+                invalidate()
+            }
+        }
+    }
+
+    /**
+     * url 网络图片地址
+     * isLoad 是否显示进度条，默认不显示
+     */
+    fun autoUrlBg(url: String?, isLoad: Boolean = false) {
+        if (isLoad && context != null && context is Activity) {
+            Bitmaps(url).optionsRGB_565(false).showLoad(context as Activity).get() {
+                autoUrlBg = it
+                if (context != null && context is Activity) {
+                    context.runOnUiThread {
+                        invalidate()
+                    }
+                }
+            }
+        } else {
+            Bitmaps(url).optionsRGB_565(false).showLoad(false).get() {
+                autoUrlBg = it
+                if (context != null && context is Activity) {
+                    context.runOnUiThread {
+                        invalidate()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 重新自定义背景图片(为了适配正确，位图最好都放在nodpi文件夹里。)
+     */
+    private var autoDefaultBg: Bitmap? = null//fixme 默认图片
+
+    fun autoDefaultBg(bitmap: Bitmap?) {
+        this.autoDefaultBg = bitmap
+        if (context != null && context is Activity) {
+            context.runOnUiThread {
+                invalidate()
+            }
+        }
+    }
+
+    fun autoDefaultBg(resId: Int, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoDefaultBg = AssetsUtils.getInstance().getBitmapFromAssets(null, resId, isRGB_565)
+        autoDefaultBg?.let {
+            autoDefaultBg = px.xBitmap(it, width, height)//自动适配
+        }
+        if (isAutoWH) {
+            requestLayout()
+        }
+    }
+
+    fun autoDefaultBg(assetsPath: String, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoDefaultBg = AssetsUtils.getInstance().getBitmapFromAssets(assetsPath, 0, isRGB_565)
+        autoDefaultBg?.let {
+            autoDefaultBg = px.xBitmap(it, width, height)//自动适配
+        }
+        if (isAutoWH) {
+            requestLayout()
+        }
+    }
+
+    private var autoPressBg: Bitmap? = null//fixme 按下图片
+    fun autoPressBg(bitmap: Bitmap?) {
+        this.autoPressBg = bitmap
+        if (context != null && context is Activity) {
+            context.runOnUiThread {
+                invalidate()
+            }
+        }
+    }
+
+    fun autoPressBg(resId: Int, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoPressBg = AssetsUtils.getInstance().getBitmapFromAssets(null, resId, isRGB_565)
+        autoPressBg?.let {
+            autoPressBg = px.xBitmap(it, width, height)//自动适配
+        }
+        if (isAutoWH) {
+            requestLayout()
+        }
+        isClickable = true//具备点击能力
+    }
+
+    fun autoPressBg(assetsPath: String, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoPressBg = AssetsUtils.getInstance().getBitmapFromAssets(assetsPath, 0, isRGB_565)
+        autoPressBg?.let {
+            autoPressBg = px.xBitmap(it, width, height)//自动适配
+        }
+        if (isAutoWH) {
+            requestLayout()
+        }
+        isClickable = true//具备点击能力
+    }
+
+    private var autoSelectBg: Bitmap? = null//fixme 选中图片（优先级最高）
+    fun autoSelectBg(bitmap: Bitmap?) {
+        this.autoSelectBg = bitmap
+        if (context != null && context is Activity) {
+            context.runOnUiThread {
+                invalidate()
+            }
+        }
+    }
+
+    fun autoSelectBg(resId: Int, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoSelectBg = AssetsUtils.getInstance().getBitmapFromAssets(null, resId, isRGB_565)
+        autoSelectBg?.let {
+            autoSelectBg = px.xBitmap(it, width, height)//自动适配
+        }
+        if (isAutoWH) {
+            requestLayout()
+        }
+        isClickable = true//具备点击能力
+    }
+
+    fun autoSelectBg(assetsPath: String, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoSelectBg = AssetsUtils.getInstance().getBitmapFromAssets(assetsPath, 0, isRGB_565)
+        autoSelectBg?.let {
+            autoSelectBg = px.xBitmap(it, width, height)//自动适配
+        }
+        if (isAutoWH) {
+            requestLayout()
+        }
+        isClickable = true//具备点击能力
+    }
+
+    //fixme 防止触摸状态和选中状态冲突，会出现一闪的情况。把触摸状态制空。
+    //fixme autoBg(R.mipmap.p_second_gou_gay,null, R.mipmap.p_second_gou_blue)
+    fun autoBg(default: Int, press: Int? = default, select: Int? = press, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoDefaultBg(default, width, height, isRGB_565)
+        if (press == default) {
+            autoPressBg = autoDefaultBg
+        } else {
+            press?.apply {
+                autoPressBg(this, width, height, isRGB_565)
+                isClickable = true//具备点击能力
+            }
+        }
+        if (press == select) {
+            autoSelectBg = autoPressBg
+        } else {
+            select?.apply {
+                autoSelectBg(this, width, height, isRGB_565)
+                isClickable = true//具备点击能力
+            }
+        }
+    }
+
+    fun autoBg(default: String, press: String? = default, select: String? = press, width: Int = 0, height: Int = 0, isRGB_565: Boolean = false) {
+        autoDefaultBg(default, width, height, isRGB_565)
+        if (press == default || press.equals(default)) {
+            autoPressBg = autoDefaultBg
+        } else {
+            press?.apply {
+                autoPressBg(this, width, height, isRGB_565)
+                isClickable = true//具备点击能力
+            }
+        }
+        if (press == select || press.equals(select)) {
+            autoSelectBg = autoPressBg
+        } else {
+            select?.apply {
+                autoSelectBg(this, width, height, isRGB_565)
+                isClickable = true//具备点击能力
+            }
+        }
+    }
+
+    var isAutoWH = true//fixme 控件的宽度和高度是否为自定义位图的宽度和高度。默认是
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        var w = 0
+        var h = 0
+        if (isAutoWH) {
+            autoDefaultBg?.apply {
+                if (!isRecycled) {
+                    if (width > w) {
+                        w = width
+                    }
+                    if (height > h) {
+                        h = height
+                    }
+                }
+            }
+            autoPressBg?.apply {
+                if (!isRecycled) {
+                    if (width > w) {
+                        w = width
+                    }
+                    if (height > h) {
+                        h = height
+                    }
+                }
+            }
+            autoSelectBg?.apply {
+                if (!isRecycled) {
+                    if (width > w) {
+                        w = width
+                    }
+                    if (height > h) {
+                        h = height
+                    }
+                }
+            }
+        }
+        if (w > 0 && h > 0) {
+            //取自定义位图宽度和高度最大的那个。
+            setMeasuredDimension(w, h)
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        }
+    }
+
+    var autoLeftPadding = 0f//左补丁(负数也有效哦)
+    var autoTopPadding = 0f//上补丁
+    var isAutoCenter = true//位图是否居中,默认居中
+    //画自定义背景
+    open fun drawAutoBg(canvas: Canvas) {
+        if (w <= 0 || h <= 0) {
+            return
+        }
+        var paint = BaseView.getPaint()
+        //网络背景位图（铺满整个背景控件）
+        autoUrlBg?.apply {
+            if (!isRecycled) {
+                if (width != w || height != h) {
+                    autoUrlBg = px.xBitmap(this, w, h)//位图和控件拉伸到一样大小
+                    autoUrlBg?.apply {
+                        if (!isRecycled) {
+                            canvas.drawBitmap(this, 0f, 0f, paint)
+                        }
+                    }
+                } else {
+                    canvas.drawBitmap(this, 0f, 0f, paint)
+                }
+            }
+        }
+        //Log.e("test", "isSelected:\t" + isSelected + "\tisPress：\t" + isPressed)
+        if (isSelected && autoSelectBg != null) {
+            //选中状态图片,优先级最高
+            autoSelectBg?.apply {
+                if (!isRecycled) {
+                    if (isAutoCenter) {
+                        canvas.drawBitmap(this, px.centerBitmapX(this, w.toFloat()), px.centerBitmapY(this, h.toFloat()), paint)
+                    } else {
+                        canvas.drawBitmap(this, autoLeftPadding, autoTopPadding, paint)
+                    }
+                }
+            }
+        } else {
+            if (isPressed && autoPressBg != null) {
+                //按下状态
+                autoPressBg?.apply {
+                    if (!isRecycled) {
+                        if (isAutoCenter) {
+                            canvas.drawBitmap(this, px.centerBitmapX(this, w.toFloat()), px.centerBitmapY(this, h.toFloat()), paint)
+                        } else {
+                            canvas.drawBitmap(this, autoLeftPadding, autoTopPadding, paint)
+                        }
+                    }
+                }
+            } else {
+                //普通状态
+                autoDefaultBg?.apply {
+                    if (!isRecycled) {
+                        if (isAutoCenter) {
+                            canvas.drawBitmap(this, px.centerBitmapX(this, w.toFloat()), px.centerBitmapY(this, h.toFloat()), paint)
+                        } else {
+                            canvas.drawBitmap(this, autoLeftPadding, autoTopPadding, paint)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //释放位图
+    fun recycle() {
+        autoDefaultBg?.apply {
+            if (!isRecycled) {
+                recycle()
+            }
+        }
+        autoDefaultBg = null
+        autoPressBg?.apply {
+            if (!isRecycled) {
+                recycle()
+            }
+        }
+        autoPressBg = null
+        autoSelectBg?.apply {
+            if (!isRecycled) {
+                recycle()
+            }
+        }
+        autoSelectBg = null
+        autoUrlBg?.apply {
+            if (!isRecycled) {
+                recycle()
+            }
+        }
+        autoUrlBg = null
+        System.gc()//提醒内存回收
+    }
+
+
+    //fixme 什么都不做，交给子类去实现绘图
+    //fixme 之所以会有这个方法。是为了保证自定义的 draw和onDraw的执行顺序。始终是在最后。
+    protected open fun draw2(canvas: Canvas, paint: Paint) {}
+
     var afterDrawRadius = true//fixme 圆角边框是否最后画。默认最后画。不管是先画，还是后面。总之都在背景上面。背景最底层。
     override fun draw(canvas: Canvas?) {
         if (Build.VERSION.SDK_INT <= 19 && (left_top > 0 || left_bottom > 0 || right_top > 0 || right_bottom > 0 || all_radius > 0)) {//19是4.4系统。这个系统已经很少了。基本上也快淘汰了。
@@ -228,11 +578,18 @@ open class RoundTextView : TextView {
             canvas?.drawColor(color)//必不可少，不能为透明色。
             canvas?.saveLayerAlpha(RectF(0f, 0f, w.toFloat(), h.toFloat()), 255, Canvas.ALL_SAVE_FLAG)//必不可少，解决透明黑框。
         }
+
+        //画自定义背景(在super的后面，不然会遮挡文字)
+        canvas?.let {
+            drawAutoBg(it)
+        }
         super.draw(canvas)
+
         if (!afterDrawRadius) {
             drawRadius(canvas)
         }
         canvas?.let {
+            draw2(it, BaseView.getPaint())
             draw?.let {
                 it(canvas, BaseView.getPaint())
             }

@@ -104,6 +104,43 @@ open class BasePx {
         }
     }
 
+    //以x为标准适配位图
+    fun xBitmap(src: Bitmap, w: Int = 0, h: Int = 0): Bitmap {
+        var width = w
+        var height = h
+        //如果宽度和高度小于0。就以位置自身的宽和高进行适配
+        if (width <= 0 || height <= 0) {
+            //以水平X轴，为标准进行适配
+            width = x(src.width)
+            height = x(src.height)
+        }
+        if (width > 0 && height > 0 && src.width != width) {
+            var bm = Bitmap.createScaledBitmap(src, width, height, true)
+            src.recycle()//原有的位图释放掉
+            return bm
+        }
+        return src
+    }
+
+    //以y为标准适配位图
+    fun yBitmap(src: Bitmap, w: Int = 0, h: Int = 0): Bitmap {
+        var width = w
+        var height = h
+        //如果宽度和高度小于0。就以位置自身的宽和高进行适配
+        if (width <= 0 || height <= 0) {
+            //以水平X轴，为标准进行适配
+            width = y(src.width)
+            height = y(src.height)
+        }
+        if (width > 0 && height > 0 && src.width != width) {
+            var bm = Bitmap.createScaledBitmap(src, width, height, true)
+            src.recycle()//原有的位图释放掉
+            return bm
+        }
+        return src
+    }
+
+
     /**
      * fixme 适配x值(默认全屏)，以竖屏为标准。
      */
@@ -213,7 +250,7 @@ open class BasePx {
         return y
     }
 
-    //获取位图居中X坐标，width对其的宽度
+    //获取位图居中X坐标，width对其的宽度[即总宽度]
     fun centerBitmapX(bitmap: Bitmap, width: Float): Float {
         var x = (width - bitmap.width) / 2
         return x
