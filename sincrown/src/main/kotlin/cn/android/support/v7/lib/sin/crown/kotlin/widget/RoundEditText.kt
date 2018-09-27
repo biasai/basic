@@ -434,7 +434,7 @@ open class RoundEditText : EditText {
                 var s = it.substring(it.indexOf("."))
                 if (s.length >= 2) {
                     s = s.substring(1)
-                    if (s.length >= 3) {
+                    if (s.length > this.num) {
                         setText(KStringUtils.doubleString(it, this.num))//保留指定小数个数
                         setSelection(length())//光标
                     }
