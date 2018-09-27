@@ -421,10 +421,11 @@ open class RoundEditText : EditText {
 
     //小数类型,保留指定小数个数
     var num: Int = 2//小数点后最多保留几位
-
+    var isDecimal = false//是否为小数类型。
     //小数类型
     fun decimal(num: Int = 2) {
         this.num = num
+        isDecimal = true//小数类型。
         //小数类型，以下两个必须同时设置才有效。
         inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         //最多保留多少位小数。
@@ -580,7 +581,19 @@ open class RoundEditText : EditText {
             override fun afterTextChanged(s: Editable?) {
                 s?.let {
                     //watcher(it.toString())//""空字符串也会监听返回。
-                    watcher(text.toString())//it靠不住，text获取的才是实时的正确数据。
+                    var mText = text.toString()//it靠不住，text获取的才是实时的正确数据。
+                    if (isDecimal) {
+                        //小数类型
+                        if (mText.trim().equals(".")) {
+                            //首个字符不能为点。
+                            setText(null)
+                        } else {
+                            //1.默认就等于1.0 。double可以转换1.(点的后面没有数，默认就是0)
+                            watcher(mText)
+                        }
+                    } else {
+                        watcher(mText)
+                    }
                 }
             }
 
