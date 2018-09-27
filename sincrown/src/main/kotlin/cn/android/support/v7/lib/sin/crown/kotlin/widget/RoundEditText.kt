@@ -26,6 +26,7 @@ import cn.android.support.v7.lib.sin.crown.kotlin.common.px
 import cn.android.support.v7.lib.sin.crown.kotlin.helper.AsteriskPasswordTransformationMethod
 import cn.android.support.v7.lib.sin.crown.kotlin.helper.LimitInputTextWatcher
 import cn.android.support.v7.lib.sin.crown.kotlin.https.Bitmaps
+import cn.android.support.v7.lib.sin.crown.kotlin.utils.KStringUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.KTimerUtils
 import cn.android.support.v7.lib.sin.crown.kotlin.utils.SelectorUtils
 import cn.android.support.v7.lib.sin.crown.utils.AssetsUtils
@@ -418,6 +419,29 @@ open class RoundEditText : EditText {
         }
     }
 
+    //小数类型,保留指定小数个数
+    var num: Int = 2//小数点后最多保留几位
+
+    //小数类型
+    fun decimal(num: Int = 2) {
+        this.num = num
+        //小数类型，以下两个必须同时设置才有效。
+        inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        //最多保留多少位小数。
+        addTextWatcher {
+            if (it.contains(".")) {
+                var s = it.substring(it.indexOf("."))
+                if (s.length >= 2) {
+                    s = s.substring(1)
+                    if (s.length >= 3) {
+                        setText(KStringUtils.doubleString(it, this.num))//保留指定小数个数
+                        setSelection(length())//光标
+                    }
+                }
+            }
+        }
+    }
+
     //密码类型（默认就是显示不见的）
     fun password() {
         addTextChangedListener(LimitInputTextWatcher(this))//默认的筛选条件(正则:不能输入中文和空格)
@@ -555,7 +579,8 @@ open class RoundEditText : EditText {
         addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 s?.let {
-                    watcher(it.toString())//""空字符串也会监听返回。
+                    //watcher(it.toString())//""空字符串也会监听返回。
+                    watcher(text.toString())//it靠不住，text获取的才是实时的正确数据。
                 }
             }
 
@@ -723,7 +748,7 @@ open class RoundEditText : EditText {
      * fixme 设置最大输入个数。即最大文字个数。
      * setMaxLines(lines) 设置行数
      */
-    fun setMaxLength(num: Int){
+    fun setMaxLength(num: Int) {
         filters = arrayOf<InputFilter>(InputFilter.LengthFilter(num)) //最大输入长度，网易的是6-18个字符
     }
 
