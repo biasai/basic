@@ -443,6 +443,12 @@ open class RoundEditText : EditText {
         }
     }
 
+    //账号类型(和密码类型一样，不能输入中文和空格。并且是可见的。)
+    fun account() {
+        password()
+        showPassword()
+    }
+
     //密码类型（默认就是显示不见的）
     fun password() {
         addTextChangedListener(LimitInputTextWatcher(this))//默认的筛选条件(正则:不能输入中文和空格)
