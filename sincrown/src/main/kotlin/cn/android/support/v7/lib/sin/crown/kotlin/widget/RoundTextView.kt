@@ -265,10 +265,11 @@ open class RoundTextView : TextView {
     /**
      * url 网络图片地址
      * isLoad 是否显示进度条，默认不显示
+     * isRepeat 是否允许重复加载，默认允许
      */
-    fun autoUrlBg(url: String?, isLoad: Boolean = false) {
+    fun autoUrlBg(url: String?, isLoad: Boolean = false,isRepeat:Boolean=true) {
         if (isLoad && context != null && context is Activity) {
-            Bitmaps(url).optionsRGB_565(false).showLoad(context as Activity).get() {
+            Bitmaps(url).optionsRGB_565(false).showLoad(context as Activity).repeat(isRepeat).get() {
                 autoUrlBg = it
                 if (context != null && context is Activity) {
                     context.runOnUiThread {
@@ -277,7 +278,7 @@ open class RoundTextView : TextView {
                 }
             }
         } else {
-            Bitmaps(url).optionsRGB_565(false).showLoad(false).get() {
+            Bitmaps(url).optionsRGB_565(false).showLoad(false).repeat(isRepeat).get() {
                 autoUrlBg = it
                 if (context != null && context is Activity) {
                     context.runOnUiThread {
